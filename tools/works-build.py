@@ -23,7 +23,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'works')
 THUMB = os.path.join(ROOT, 'assets', 'works-thumb')
 JS_OUT = os.path.join(ROOT, 'js', 'works-list.js')
+TITLE_MAP = os.path.join(ROOT, 'tools', 'works-titles.json')
 EXTS = ('.jpeg', '.jpg', '.png', '.webp', '.avif')
+
+
+def load_titles():
+    """读重命名时导出的「新文件名 -> 原标题」映射，缺文件返回空表。"""
+    try:
+        with open(TITLE_MAP, 'r', encoding='utf-8') as fp:
+            return json.load(fp)
+    except (OSError, ValueError):
+        return {}
 
 
 def title_of(name):
@@ -62,6 +72,7 @@ def main():
         raise SystemExit('找不到原图目录：' + SRC)
 
     os.makedirs(THUMB, exist_ok=True)
+    titles = load_titles()
 
     out = []
     for i, path in enumerate(files):
@@ -82,7 +93,7 @@ def main():
             'f': thumb_name,                 # 缩略图文件名（作品墙用）
             'full': quote(name),             # 原图文件名（灯箱大图，URL 编码）
             'w': w, 'h': h,                  # 原始尺寸
-            't': title_of(name),             # 标题（灯箱顶部可显示）
+            't': titles.get(name) or title_of(name),  # 标题：优先映射，其次从文件名提取
         })
 
     with open(JS_OUT, 'w', encoding='utf-8') as fp:

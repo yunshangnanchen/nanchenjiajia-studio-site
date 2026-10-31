@@ -22,7 +22,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMP_NAME = 'assets/gallery'                     # 画廊图源目录（avif/png），URL 用正斜杠
 COMP = os.path.join(ROOT, *COMP_NAME.split('/'))
-JS_OUT = os.path.join(ROOT, 'gallery-list.js')
+JS_OUT = os.path.join(ROOT, 'js', 'gallery-list.js')
 EXTS = ('.avif', '.png')                        # 压缩版可能的扩展名
 
 
