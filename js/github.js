@@ -1,6 +1,6 @@
 /* ============================================================
    GitHub 页面：个人资料 + 贡献表 + 项目列表
-   —— 两位成员，左侧竖条切换；所有内容集中在 PEOPLE 里改数字文字即可
+   —— 三位成员，左侧竖条切换；所有内容集中在 PEOPLE 里改数字文字即可
    ============================================================ */
 (function () {
   /* ============================================================
@@ -31,6 +31,21 @@
       repos: [
         { name: 'astrbot_plugin_humanlike', desc: '一个 AstrBot 插件：让机器人在群聊中按心流和 AI 判断决定是否发言，而不是每条消息都回复。', lang: 'Python', stars: 3 },
         { name: 'netmux', desc: 'Linux 多网口带宽聚合工具：Rust + GPUI，支持负载均衡、故障转移与 TUN 聚合。', lang: 'Rust', stars: 0 }
+      ]
+    },
+    {
+      name:  'YUNSHANG · ZEIONL',
+      login: 'zeionl84',
+      url:   'https://github.com/zeionl84',
+      avatar: 'assets/avatar-zeionl.png',
+      bio:   "Starting late doesn't mean it's too late.",
+      total: 0,
+      seed:  20261101,
+      repos: [
+        { name: 'astro-pure-studio', desc: '面向 Astro Pure 博客的本地桌面工作室：本地可视化编辑与管理 Astro 内容。', lang: 'Vue', stars: 0 },
+        { name: 'wcl', desc: '一个带自动更新的 Minecraft 启动器。', lang: 'JavaScript', stars: 0 },
+        { name: 'Aether-Minecraft-Launcher', desc: 'Minecraft 启动器：基于 Tauri + Vue 3 的桌面客户端。', lang: 'Rust', stars: 0 },
+        { name: 'KazeNest', desc: 'Tauri + Vue + TypeScript 桌面应用模板。', lang: 'Vue', stars: 0 }
       ]
     }
   ];
@@ -306,7 +321,7 @@
   });
 
   /* ============================================================
-     6. 两位成员切换：左侧竖条
+     6. 三位成员切换：左侧竖条
      ============================================================ */
   let currentIdx = 0;
   let autoAdvance = true;      // 自动轮播开关：用户手动点过切换条后置 false，不再自动切

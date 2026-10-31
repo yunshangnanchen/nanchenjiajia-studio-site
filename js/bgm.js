@@ -119,14 +119,15 @@
 
     /* ---- 跨页续播：STUDIO 里选中的曲目，切到别的页面接着放 ----
        studio 页有自己的播放器（会自己从原位置恢复），这里只管其它页面：
-       发现 sessionStorage 里有正在播的曲目，就把本页的 audio 切过去接管，
-       导航栏那个三角按钮同时变成「曲目播放 / 暂停」开关。 */
+       发现 sessionStorage 里有「正在播放」的曲目，就把本页的 audio 切过去接管。
+       若曲目是暂停态（track.playing=false），则不接管 —— 回到 featherfall 背景音乐，
+       避免「既不放 studio 曲目也不放背景音乐」的静音。 */
     var TRACK_STORE = 'ncj:track';
     var hasPlayer  = !!document.querySelector('.music-page');
     var track = null;
     try { track = JSON.parse(sessionStorage.getItem(TRACK_STORE) || 'null'); } catch (e) {}
 
-    var followTrack = !hasPlayer && !!(track && track.src) &&
+    var followTrack = !hasPlayer && !!(track && track.src && track.playing) &&
                       (Date.now() - (track.at || 0) < 6 * 60 * 1000);
 
     function saveTrackState(playing) {
@@ -156,9 +157,10 @@
         animateToggle(playing);
       }
     }
+    var leavingPage = false;   // 切页标志：unload 触发的 pause 不覆盖已保存的 playing 状态
     audio.addEventListener('play',    function () { setUI(true);  saveTrackState(true);  });
     audio.addEventListener('playing', function () { setUI(true);  });
-    audio.addEventListener('pause',   function () { setUI(false); saveTrackState(false); });
+    audio.addEventListener('pause',   function () { setUI(false); if (!leavingPage) saveTrackState(false); });
 
     /* ---- 播放 / 暂停 ---- */
     function pauseTrackPlayer() {
@@ -180,6 +182,18 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
+      if (hasPlayer) {
+        /* 在 STUDIO 页：顶部按钮控制本页播放器（当前曲目），而不是 featherfall */
+        window.__bgmSuppressed = true;
+        if (window.MirrorPlayer && typeof window.MirrorPlayer.toggle === 'function') {
+          window.MirrorPlayer.toggle();
+        } else if (window.MirrorPlayer && typeof window.MirrorPlayer.pause === 'function') {
+          if (window.MirrorPlayer.isPlaying && window.MirrorPlayer.isPlaying()) {
+            window.MirrorPlayer.pause();
+          }
+        }
+        return;
+      }
       if (followTrack) {                       // 本页在接管 studio 的曲目
         window.__bgmSuppressed = true;
         if (audio.paused) { var p = audio.play(); if (p && p.catch) p.catch(function () {}); }
@@ -191,19 +205,38 @@
 
     /* ---- 记住曲目进度，切页 / 刷新都不丢 ---- */
     if (followTrack) {
-      window.addEventListener('pagehide', function () { saveTrackState(); });
-      window.addEventListener('beforeunload', function () { saveTrackState(); });
+      window.addEventListener('pagehide', function () { leavingPage = true; saveTrackState(); });
+      window.addEventListener('beforeunload', function () { leavingPage = true; saveTrackState(); });
       setInterval(function () { if (!audio.paused) saveTrackState(true); }, 2500);
 
-      if (track.playing) {
+      /* 恢复 studio 曲目：先把进度 seek 到位，等能播(canplay)再 play，
+         避免「先从头出声再跳」的卡顿。
+         播放被浏览器自动播放策略拦截时，挂首次交互兜底，保证点一下就续上。 */
+      function resumeTrackPlay() {
         var gap = Math.min(3, Math.max(0, (Date.now() - (track.at || Date.now())) / 1000));
         var target = Math.max(0, (track.t || 0) + gap);
-        var applySeek = function () { try { audio.currentTime = target; } catch (err) {} };
-        if (audio.readyState >= 1) applySeek();
-        else audio.addEventListener('loadedmetadata', applySeek, { once: true });
-
+        try { audio.currentTime = target; } catch (err) {}
         var pr = audio.play();
-        if (pr && pr.catch) pr.catch(function () { setUI(false); });
+        if (pr && pr.catch) {
+          pr.catch(function () {
+            setUI(false);
+            if (!window.__bgmSuppressed) armFirstInteraction();
+          });
+        }
+      }
+
+      if (track.playing) {
+        // 标记：followTrack 正在接管，下面 AUTOPLAY 别再对 featherfall 起播
+        window.__followTrackResuming = true;
+
+        if (audio.readyState >= 1) {
+          resumeTrackPlay();
+        } else {
+          audio.addEventListener('canplay', function onCan() {
+            audio.removeEventListener('canplay', onCan);
+            resumeTrackPlay();
+          }, { once: true });
+        }
       }
     }
 
@@ -215,15 +248,32 @@
     }
     window.addEventListener('pagehide', saveState);
     window.addEventListener('beforeunload', saveState);
+    // 每 1.5s 存一次进度（比 pagehide 更勤），即使异常退出也能拿到较新的位置
+    setInterval(function () { if (!audio.paused) saveState(); }, 1500);
 
-    try {
-      var s = JSON.parse(sessionStorage.getItem(STORE) || '{}');
-      if (s && s.t > 0.5) {
-        var apply = function () { try { audio.currentTime = s.t; } catch (e) {} };
-        if (audio.readyState >= 1) apply();
-        else audio.addEventListener('loadedmetadata', apply, { once: true });
+    /* 上次的播放状态：t=进度，playing=当时是否在播 */
+    var resume = null;
+    try { resume = JSON.parse(sessionStorage.getItem(STORE) || 'null'); } catch (e) {}
+
+    /* 续播：把进度先设好，等到能播(canplay)再决定是否 play，
+       避免「先从头出声再跳」造成的杂音和卡顿。 */
+    var resumeSeekDone = false;
+    function seekResume() {
+      if (resumeSeekDone) return;
+      resumeSeekDone = true;
+      if (resume && resume.t > 0.5) {
+        try { audio.currentTime = resume.t; } catch (e) {}
       }
-    } catch (e) {}
+    }
+    if (resume && resume.t > 0.5) {
+      if (audio.readyState >= 1) seekResume();
+      else audio.addEventListener('loadedmetadata', seekResume, { once: true });
+    }
+    // 兜底：metadata 迟迟不来也强制 seek 一次（进度不准但至少能出声）
+    setTimeout(seekResume, 2500);
+
+    /* 是否恢复「播放中」状态：切页前在播 → 切页后接着播 */
+    var shouldResumePlay = !!(resume && resume.playing);
 
     /* ---- 自动播放：先直接尝试；被拦截则等首次交互再起 ---- */
     function armFirstInteraction() {
@@ -246,13 +296,47 @@
       document.addEventListener('touchstart', once, true);
     }
 
-    /* ---- 自动播放（当前由 AUTOPLAY 关闭）：开启时先直接尝试，被拦截则等首次交互再起 ---- */
-    if (AUTOPLAY) {
-      var pp = null;
-      try { pp = audio.play(); } catch (e) {}
-      if (pp && pp.catch) {
-        pp.catch(function () { if (!window.__bgmSuppressed) armFirstInteraction(); });
+    /* 真正开始播放：等进度 seek 到位（或 metadata 就绪）再 play，
+       保证切页后是「接着上一段继续」，而不是从头播一下再跳。 */
+    function startPlayback() {
+      if (!audio.paused) return;                 // 已经在播
+      if (audio.readyState >= 1) {               // 有 metadata，能直接播
+        var p = audio.play();
+        if (p && p.catch) p.catch(function () { if (!window.__bgmSuppressed) armFirstInteraction(); });
+      } else {
+        // metadata 还没到：等 canplay 再播，期间静音，避免从头出声
+        audio.addEventListener('canplay', function onCan() {
+          audio.removeEventListener('canplay', onCan);
+          seekResume();
+          var p2 = audio.play();
+          if (p2 && p2.catch) p2.catch(function () { if (!window.__bgmSuppressed) armFirstInteraction(); });
+        }, { once: true });
       }
+    }
+
+    /* ---- 自动播放开关：开启时先直接尝试，被拦截则等首次交互再起 ----
+       注意：
+       - followTrack（studio 曲目正在播）时，跳过本段，由 followTrack 自己恢复；
+       - 续播场景（resume.playing）交给 startPlayback，先 seek 再出声。 */
+    if (AUTOPLAY) {
+      if (followTrack) {
+        // 正在接管 studio 曲目：交给上面 followTrack 的恢复逻辑，这里不起播
+      } else if (shouldResumePlay && resume && resume.t > 0.5) {
+        // 续播 featherfall：seek 到位后再播，无缝衔接
+        startPlayback();
+      } else if (resume && resume.playing === false) {
+        // 用户上次手动暂停过（切页/刷新前是暂停态）：尊重意图，不再自动起播
+      } else {
+        // 全新开始：直接从头播 featherfall
+        var pp = null;
+        try { pp = audio.play(); } catch (e) {}
+        if (pp && pp.catch) {
+          pp.catch(function () { if (!window.__bgmSuppressed) armFirstInteraction(); });
+        }
+      }
+    } else if (shouldResumePlay && !followTrack) {
+      // AUTOPLAY 关但上次在播：也恢复（保持跨页一致）
+      startPlayback();
     }
 
     /* ---- 对外接口 ---- */
@@ -260,7 +344,11 @@
       play: playBGM,
       pause: pauseBGM,
       toggle: function () { if (audio.paused) playBGM(); else pauseBGM(); },
-      isPlaying: function () { return !audio.paused; }
+      isPlaying: function () { return !audio.paused; },
+      /* 供 STUDIO 页播放器调用：把顶部三角按钮的 UI 同步成「本页曲目在播/暂停」 */
+      syncUI: function (playing) { setUI(!!playing); },
+      /* 供 STUDIO 页判断：本页是否有自己的播放器（决定按钮控制谁） */
+      hasPlayer: hasPlayer
     };
   }
 

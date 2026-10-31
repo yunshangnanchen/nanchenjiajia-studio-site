@@ -750,14 +750,26 @@ html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
   font-variant-numeric: tabular-nums;
 }
 
-/* 4 列 × 5 行，按列向下排；每列内部左对齐 */
+/* 4 列，每列内部向下排列；列数量可不同，左对齐 */
 .fl-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(5, auto);
-  grid-auto-flow: column;
   column-gap: 48px;
   row-gap: 0;
+}
+.fl-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* 每列顶部英文标题：小字、低调，跟 fl-sub 同语气 */
+.fl-col-title {
+  font-size: 10px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  padding-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 /* 纯文字链接：无边框、无底色 */
@@ -804,8 +816,8 @@ html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
   .fl-band { padding: 0 28px; }
   .fl-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(10, auto);
     column-gap: 40px;
+    row-gap: 32px;
   }
   .footer--links { --fl-top: 230px; --fl-pad-top: calc(38px * var(--fl-scale)); }
   .fl-copy { padding: 0 28px calc(36px * var(--fl-scale)); }
@@ -835,7 +847,7 @@ html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
 /* 封面规格文字下方的直线音频条（点一下播放 / 暂停 Mirror） */
 .soundbar {
   width: 100%;
-  margin-top: 26px;
+  margin-top: 12px;
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
@@ -965,7 +977,7 @@ html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
   display: block;
 }
 .album-meta {
-  margin-top: 22px;
+  margin-top: 16px;
   width: 320px;
   max-width: 100%;
 }
@@ -1000,6 +1012,9 @@ html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
 }
 .meta-row dt::after { content: ':'; }
 .meta-row dd { margin: 0; color: var(--white); text-align: right; }
+/* 纯文本备注行：占满整行、左对齐、弱化颜色，上方一条横线分割 */
+.meta-row.meta-note { grid-template-columns: 1fr; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.14); }
+.meta-row.meta-note dd { text-align: left; color: var(--white-dim); font-style: italic; letter-spacing: .4px; line-height: 1.55; }
 .meta-sub { display: block; color: var(--white-dim); text-align: right; }
 .album-info {
   flex: 1 1 auto;

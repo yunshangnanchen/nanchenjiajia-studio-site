@@ -399,6 +399,41 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     return s;
   }
 
+  /* Kotlin 代码着色（// 注释、关键字、函数名、字符串、类型）
+     同样用占位符保护已着色 token，避免后续正则误匹配 span 属性 */
+  function highlightKt(raw) {
+    if (!raw) return '';
+    let s = escapeHtml(raw);
+    const store = [];
+
+    function stash(match, cls) {
+      const key = '\u0001A' + store.length + '\u0001';
+      store.push('<span class="' + cls + '">' + match + '</span>');
+      return key;
+    }
+
+    // 1) 字符串（含 Kotlin 模板 ${}），先着色避免 // 误匹配
+    s = s.replace(/"(?:[^"\\]|\\.)*"/g, function (m) { return stash(m, 'tk-str'); });
+    // 2) // 行注释（含行首缩进，到行尾）
+    s = s.replace(/^(\s*)(\/\/[^\n]*)$/gm, function (_, ind, body) {
+      return ind + stash(body, 'tk-cmt');
+    });
+    // 3) 关键字
+    s = s.replace(/\b(data|class|fun|val|var|return|if|else|for|while|when|in|object|interface|override|package|import)\b/g,
+      function (m) { return stash(m, 'tk-kw'); });
+    // 4) 内置类型
+    s = s.replace(/\b(String|Int|Boolean|Double|Float|Long|Unit|Any)\b/g,
+      function (m) { return stash(m, 'tk-cls'); });
+    // 5) 函数名（名后跟左括号）
+    s = s.replace(/\b([a-zA-Z_]\w*)(?=\()/g, function (m) { return stash(m, 'tk-fn'); });
+
+    // 还原占位符
+    store.forEach(function (html, i) {
+      s = s.replace('\u0001A' + i + '\u0001', html);
+    });
+    return s;
+  }
+
   /* ---------- 打字音：与 ARCHIVE 同款「老式打字机」合成（无需音频文件） ----------
      · 铅字击打：一段带通白噪 + 高频高通，几毫秒内衰减 → 「嗒」
      · 字杆回弹：一段下滑的三角波 → 闷闷的「笃」
@@ -483,9 +518,9 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     window.addEventListener(ev, ensureAudio, { passive: true, once: true });
   });
 
-  /* ---------- 两位成员：头像 + 代码介绍，轮流展示 ----------
-     用两个斜杠 // 区分两位；每位打完停留 1.5 秒，再自动切到下一位重新打印。
-     代码行用 \t 表示缩进（渲染成 4 个空格），保证 Python 缩进对齐。 */
+  /* ---------- 三位成员：头像 + 代码介绍，轮流展示 ----------
+     用斜杠 // 区分成员；每位打完停留 1.5 秒，再自动切到下一位重新打印。
+     代码行用 \t 表示缩进（渲染成 4 个空格），保证缩进对齐。 */
   const PEOPLE = [
     {
       name: 'YUNSHANGNANCHEN',
@@ -518,11 +553,30 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
         'if __name__ == "__main__":',
         '\traise SystemExit(main())'
       ]
+    },
+    {
+      name: 'YUNSHANG · ZEIONL',
+      avatar: 'assets/avatar-zeionl.png',
+      url: 'https://github.com/zeionl84',
+      lang: 'kt',
+      lines: [
+        '// YUNSHANGZEIONL',
+        '// Core team members of the studio.',
+        '// Currently learning Kotlin to complete Android app development.',
+        '// "Starting late doesn\'t mean it\'s too late."',
+        'data class Me(val name: String, val stack: String)',
+        'fun main() {',
+        '\tval me = Me("Zeionl", "Kotlin")',
+        '\tprintln("Hi, I\'m ${me.name} — I build with ${me.stack}.")',
+        '}'
+      ]
     }
   ];
 
   function highlightFor(lang, raw) {
-    return lang === 'py' ? highlightPy(raw) : highlightC(raw);
+    if (lang === 'py') return highlightPy(raw);
+    if (lang === 'kt') return highlightKt(raw);
+    return highlightC(raw);
   }
 
   /* 首行（注释行）里的名字部分包成可点击链接，跳到对应 GitHub；
@@ -551,18 +605,51 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
   let printing = false;
   let aboutOpen = false;
   let currentAvatar = '';
+  let avatarGen = 0;        // 头像切换代际：快速连切时作废旧的退出/淡入回调
+  let printTl = null;       // 像素打印动画 timeline 引用，切换时 kill 掉旧的
 
   function setAvatar(src) {
     if (!avImg || !src) return;
     if (src === currentAvatar) return;
     currentAvatar = src;
-    // 退化成首字母后（error 触发）会隐藏 img，这里恢复
-    avImg.style.display = '';
-    avBox.classList.remove('is-pixel', 'is-printing', 'is-fallback');
-    printing = false;
-    pixelReady = false;
-    avImg.onload = drawPixels;
-    avImg.src = src;
+
+    // 清理上一次可能还在跑的头像补间，避免新旧动画叠加
+    if (avBox) gsap.killTweensOf(avBox);
+    if (printTl) { printTl.kill(); printTl = null; }   // 停掉进行中的像素打印动画
+
+    // 用一个自增代际，避免快速连切时旧回调抢跑新头像
+    const avatarToken = ++avatarGen;
+
+    // 1. 旧头像缩小 + 淡化消失（保持当前像素打印态，不提前移除 is-pixel，
+    //    否则会瞬间跳回清晰图闪一下）
+    gsap.to(avBox, {
+      autoAlpha: 0, scale: 0.9, y: 10,
+      duration: 0.3, ease: 'power2.in',
+      onComplete: function () {
+        if (avatarToken !== avatarGen) return;   // 已被更新的切换取代
+        if (!avImg) return;
+
+        // 退出完成，此刻才重置头像的像素/打印态，准备接新图
+        avBox.classList.remove('is-pixel', 'is-printing', 'is-fallback');
+        printing = false;
+        pixelReady = false;
+        avImg.style.display = '';   // 退化成首字母后（error 触发）会隐藏 img，这里恢复
+
+        // 2. 换 src，新图加载完画像素层后，直接复位头像框到可见态
+        //    （新头像的「入场」就是像素打印动画本身，不再额外做平滑淡入）
+        avImg.onload = function () {
+          if (avatarToken !== avatarGen) return;
+          drawPixels();
+          gsap.set(avBox, { autoAlpha: 1, scale: 1, y: 0 });   // 立即复位，不渐变
+          if (aboutOpen) startPrint();                          // 直接进入像素打印入场
+        };
+        avImg.onerror = function () {
+          if (avatarToken !== avatarGen) return;
+          gsap.set(avBox, { autoAlpha: 1, scale: 1, y: 0 });    // 加载失败也复位，交给 is-fallback 兜底
+        };
+        avImg.src = src;
+      }
+    });
   }
 
   function drawPixels() {
@@ -580,7 +667,7 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
       c.drawImage(avImg, sx, sy, side, side, 0, 0, AV_GRID, AV_GRID);
     });
     pixelReady = true;
-    if (aboutOpen) startPrint();
+    // 打印动画由调用方统一触发：初始滚动进入视口，或 setAvatar 淡入完成后
   }
 
   function startPrint() {
@@ -592,7 +679,8 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     gsap.set(avScan, { top: '0%', opacity: 1 });
     const TOTAL = 1.5;
     const LEAD  = 0.32;
-    gsap.timeline()
+    if (printTl) { printTl.kill(); printTl = null; }
+    printTl = gsap.timeline()
       .to(avMono,  { clipPath: 'inset(0% 0% 0% 0%)', duration: TOTAL, ease: 'none' }, 0)
       .to(avColor, { clipPath: 'inset(0% 0% 0% 0%)', duration: TOTAL, ease: 'none' }, LEAD)
       .to(avScan,  { top: '100%', duration: TOTAL, ease: 'none' }, 0)
@@ -704,7 +792,7 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     typeLine();
   }
 
-  /* ---------- 两位成员切换器：两个横杠，点击切换（并停止自动轮播） ---------- */
+  /* ---------- 三位成员切换器：多个横杠，点击切换（并停止自动轮播） ---------- */
   const switchEl = doc.getElementById('peopleSwitch');
   if (switchEl) {
     PEOPLE.forEach(function (p, i) {
@@ -759,6 +847,7 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
   /* ---------- 滚动进入「关于我」视口时触发打字 + 头像打印 ---------- */
   let aboutSeen = false;
 
+  // 打字 + 像素打印 + 头像入场：只在首次进入视口时触发一次
   gsap.timeline({
     scrollTrigger: {
       trigger: '.about', start: 'top 78%', once: true,
