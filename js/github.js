@@ -12,7 +12,7 @@
       login: 'yunshangnanchen',
       url:   'https://github.com/yunshangnanchen',
       // 头像：GitHub 用户名 + .png 就是官方头像；想换本地图片就写 'assets/avatar.jpg'
-      avatar: 'https://github.com/yunshangnanchen.png',
+      avatar: 'assets/avatar-yunshangnanchen.jpg',
       bio:   '幻想终将实现',
       total: 428,                       // 贡献表上方显示的年度贡献数
       seed:  20261030,                  // 本地占位贡献图的随机种子（换人换图案）
@@ -24,7 +24,7 @@
       name:  'YUNSHANG · FENG',
       login: 'canfengplaeir',
       url:   'https://github.com/canfengplaeir',
-      avatar: 'https://github.com/canfengplaeir.png',
+      avatar: 'assets/avatar-canfengplaeir.jpg',
       bio:   'LET ME THINK',
       total: 0,
       seed:  20261031,

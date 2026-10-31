@@ -489,7 +489,7 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
   const PEOPLE = [
     {
       name: 'YUNSHANGNANCHEN',
-      avatar: 'https://github.com/yunshangnanchen.png',
+      avatar: 'assets/avatar-yunshangnanchen.jpg',
       url: 'https://github.com/yunshangnanchen',
       lang: 'c',
       lines: [
@@ -505,7 +505,7 @@ if (HAS_GSAP && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     },
     {
       name: 'YUNSHANG · FENG',
-      avatar: 'https://github.com/canfengplaeir.png',
+      avatar: 'assets/avatar-canfengplaeir.jpg',
       url: 'https://github.com/canfengplaeir',
       lang: 'py',
       lines: [
