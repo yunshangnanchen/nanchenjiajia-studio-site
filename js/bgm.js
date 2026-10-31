@@ -10,11 +10,10 @@
   var SRC   = 'assets/audio/featherfall.mp3';
   var STORE = 'ncj:bgm';
 
-  /* 进站自动播放开关（暂时关闭）
+  /* 进站自动播放开关
      false = 打开网站不出声，只有点导航栏三角才播；
-     true  = 恢复「进站即播放」，被浏览器拦截时退化为首次交互起播。
-     整体完工后把这里改成 true 即可。 */
-  var AUTOPLAY = false;
+     true  = 进站即播放 Featherfall，被浏览器拦截时退化为首次交互起播。 */
+  var AUTOPLAY = true;
 
   function init() {
     var menu = document.querySelector('.navbar .menu') || document.querySelector('.menu');
