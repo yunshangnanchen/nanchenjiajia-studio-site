@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="ghRoot">
+<head data-page-node-id="ghHead">
+  <meta charset="UTF-8" data-page-node-id="ghMeta" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="ghVp" />
+  <title>GitHub — 南辰佳佳</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="stylesheet" href="css/style.css?v=111" data-page-node-id="ghCss" />
+  <script>
+    /* 同步执行：上一页点了站内链接时，新页面第一帧就用黑幕盖住，避免闪白 */
+    try {
+      if (sessionStorage.getItem('ncj:leaving') === '1') {
+        document.documentElement.classList.add('veil-on');
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body data-page-node-id="ghBody">
+
+  <!-- 页面转场黑幕（默认透明，由 transition.js 控制） -->
+  <div class="page-veil" id="pageVeil" aria-hidden="true"></div>
+
+  <!-- 顶部菜单栏（与主页一致，GITHUB 为当前页） -->
+  <header class="navbar" id="navbar" data-page-node-id="ghNavbar">
+    <a class="brand" href="github.html" aria-label="前往 GITHUB" data-page-node-id="ghBrand">NANCHEN JIAJIA</a>
+    <a class="logo" href="archive.html" aria-label="ARCHIVE" data-page-node-id="ghLogo">
+      <img src="assets/logo.svg" alt="NanchenJiaJia Logo" data-page-node-id="ghLogoImg" />
+    </a>
+    <nav class="menu" id="siteMenu" data-page-node-id="ghMenu">
+      <a href="index.html" data-page-node-id="ghHome"><span>HOME</span></a>
+      <a href="index.html#about" data-page-node-id="ghAbout"><span>ABOUT</span></a>
+      <a href="studio.html" data-page-node-id="ghMusic"><span>STUDIO</span></a>
+      <a href="github.html" class="active" data-page-node-id="ghGithub"><span>GITHUB</span></a>
+      <a href="archive.html" data-page-node-id="ghArchive"><span>ARCHIVE</span></a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" type="button"
+            aria-label="打开菜单" aria-controls="siteMenu" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+  </header>
+  <main class="gh-page" data-page-node-id="ghMain">
+
+    <!-- 上排：左边竖条切换器 / 名字头像 / 右边贡献表 -->
+    <section class="gh-top" data-page-node-id="ghTop">
+
+      <!-- 左侧竖形切换器：两个竖条，点击切换两位成员 -->
+      <div class="gh-switch" id="ghSwitch" role="tablist" aria-label="切换成员"></div>
+
+      <div class="gh-profile" data-page-node-id="ghProfile">
+        <img class="gh-avatar" id="ghAvatar" src="https://github.com/yunshangnanchen.png"
+             alt="头像" data-page-node-id="ghAvatarEl" />
+        <h1 class="gh-name" id="ghName" data-page-node-id="ghNameEl">NanchenJiaJia</h1>
+        <p class="gh-login" id="ghLogin" data-page-node-id="ghLoginEl">@yunshangnanchen</p>
+        <p class="gh-bio" id="ghBio" data-page-node-id="ghBioEl">这里是一句个人简介占位文字，可以写上职业、方向或一句座右铭。</p>
+        <a class="gh-link" id="ghLink" href="https://github.com/yunshangnanchen"
+           target="_blank" rel="noopener" data-page-node-id="ghLinkEl">在 GitHub 上查看 →</a>
+      </div>
+
+      <div class="gh-graph-wrap" data-page-node-id="ghGraphWrap">
+        <div class="gh-graph-head" data-page-node-id="ghGraphHead">
+          <strong id="ghTotal" data-page-node-id="ghTotalEl">—</strong> contributions in the last year
+        </div>
+        <div class="gh-graph-scroll" data-page-node-id="ghScroll">
+          <!-- 远程真实贡献图（ghchart.rshah.org）；加载失败时回退到下面的本地图 -->
+          <img class="gh-chart" id="ghChartImg" alt="GitHub 贡献图" data-page-node-id="ghChartImgEl" />
+          <div class="gh-graph" id="ghGraph" data-page-node-id="ghGraphEl"></div>
+        </div>
+        <div class="gh-legend" data-page-node-id="ghLegend">
+          <span data-page-node-id="ghLegendL">少</span>
+          <i class="lv0"></i><i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i>
+          <span data-page-node-id="ghLegendR">多</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 下排：主页项目 -->
+    <section class="gh-repos-sec" data-page-node-id="ghReposSec">
+      <h2 class="gh-sec-title" data-page-node-id="ghSecTitle">· MY PROJECT ·</h2>
+      <div class="gh-repos" id="ghRepos" data-page-node-id="ghReposEl"></div>
+    </section>
+
+  </main>
+
+  <footer class="footer--links" data-page-node-id="ghFooter">
+    <div class="fl-band">
+      <div class="fl-head">
+        <span class="fl-title">友情链接</span>
+        <span class="fl-sub">FRIEND LINKS</span>
+        <span class="fl-count">20</span>
+      </div>
+      <nav class="fl-grid" aria-label="友情链接">
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+      </nav>
+    </div>
+    <div class="fl-copy">© 2026 YUNSHANGNANCHEN</div>
+  </footer>
+
+  <!-- 等高线背景：固定铺满视口，位于内容之下，缓慢流动 -->
+  <canvas class="bg-contours" id="bgContours" aria-hidden="true" data-page-node-id="ghCanvas"></canvas>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="js/contours.js?v=1" data-page-node-id="ghContoursJs"></script>
+  <script src="js/github.js?v=12" data-page-node-id="ghGithubJs"></script>
+  <script src="js/github-anim.js?v=2"></script>
+  <script src="js/transition.js?v=2"></script>
+  <script src="js/nav.js?v=1"></script>
+  <script src="js/bgm.js?v=5"></script>
+</body>
+</html>

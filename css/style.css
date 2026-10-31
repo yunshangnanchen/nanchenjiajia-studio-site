@@ -1,0 +1,2254 @@
+/* ============ 黑白极简漫画风 ============ */
+:root {
+  --black: #000000;          /* 纯黑底 */
+  --black-soft: #0b0b0b;     /* 内容区底 */
+  --white: #ffffff;          /* 主线稿白 */
+  --white-dim: #b3b3b3;      /* 次级灰白 */
+  --line: rgba(255, 255, 255, 0.16);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ 页面转场遮罩 ============ */
+/* 站内跳转时盖一层黑幕：旧页面淡入黑幕 → 跳转 → 新页面黑幕淡出，避免闪白。
+   默认透明（JS 没跑也不会挡住页面），只有 JS 加 .is-on / html.veil-on 时才显形 */
+.page-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;              /* 在开场动画 (9999) 之下、其余内容之上 */
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s ease;
+}
+
+.page-veil.is-on { opacity: 1; }
+
+/* 新页面首帧就用黑幕盖住（在 <head> 里同步加的 class），此时不能有过渡 */
+html.veil-on .page-veil { opacity: 1; transition: none; }
+
+/* ============ 开场动画 ============ */
+/* 动画期间锁滚动 */
+html.is-intro, html.is-intro body { overflow: hidden; height: 100%; }
+
+.intro {
+  /* 竖屏 / 非宽屏时的兜底字号；宽屏由 JS 按“横向不超过约一半”自动测算 */
+  --name-size: min(9vw, 20vh);
+  --line1-size: min(5.6vw, 13vh);
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;          /* 上下居中 */
+  justify-content: flex-start;  /* 靠左 */
+  overflow: hidden;
+}
+
+/* 全屏随机漂浮粒子 */
+.intro-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* 文字：左对齐、上下居中 */
+.intro-text {
+  position: relative;
+  z-index: 1;
+  padding-left: 6vw;
+  text-align: left;
+}
+
+/* 每行文字各自一个"口子"：遮罩高度 = 字号 × 0.82 → 下方约 1/6 永远压在黑色里。
+   具体高度由 JS 在测算字号后写入（宽屏精确适配） */
+.intro-mask {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.intro-mask-1 { height: calc(var(--line1-size) * 0.82); }
+.intro-mask-2 { height: calc(var(--name-size) * 0.82); margin-top: 2.8vh; }
+
+/* 初始状态：口子闭合、文字在口子下方（GSAP 接管动画） */
+.intro-mask { clip-path: inset(50% 0% 50% 0%); }
+
+.intro-line-1,
+.intro-line-2 {
+  margin: 0;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+  transform: translateY(115%);
+}
+
+.intro-line-1 {
+  font-size: var(--line1-size);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.intro-line-2 {
+  font-size: var(--name-size);
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@media (max-width: 720px) {
+  .intro { --line1-size: 5.6vw; --name-size: 12vw; }
+}
+
+/* ============ 顶部菜单栏 ============ */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  /* 三栏：左品牌 / 中 logo / 右导航，中间栏恒定居中 */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 13px 28px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  justify-self: start;
+  color: var(--white);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+.brand:hover { opacity: 0.72; }
+
+/* 顶部居中的 logo（高度与状态栏文字一致）
+   职责分离：父层 <a> 负责悬浮的位移/缩放（纯 CSS），
+   子层 <img> 负责柔光与呼吸；GSAP 入场动画只作用于 <img>，互不覆盖 */
+.logo {
+  justify-self: center;
+  display: block;
+  line-height: 0;
+  transform-origin: 50% 50%;
+  transition: transform 0.45s cubic-bezier(.2, .8, .3, 1);
+  will-change: transform;
+}
+
+.logo img {
+  height: 15px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  transition: filter 0.45s ease;
+}
+
+/* 悬浮 / 键盘聚焦：整体上浮并放大 */
+.logo:hover,
+.logo:focus-visible {
+  transform: translateY(-3px) scale(1.10);
+}
+
+.logo:focus-visible { outline: none; }
+
+/* 悬浮 / 键盘聚焦：白色柔光 + 轻微呼吸 */
+.logo:hover img,
+.logo:focus-visible img {
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.55))
+          drop-shadow(0 0 14px rgba(255, 255, 255, 0.22));
+  animation: logoBreathe 1.5s ease-in-out infinite;
+}
+
+@keyframes logoBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+.menu {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+}
+
+/* 每个菜单项盒子高度固定 20px：选中态只加装饰，不改盒子尺寸，
+   否则 flex 居中会把文字顶上去 1.5px，五个选项就参差不齐 */
+.menu a {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  color: var(--white-dim);
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+.menu a > span { display: block; position: relative; }
+
+/* 宽屏：选项之间用「/」分隔。斜杠是 a 里的一个 flex 项，
+   由 align-items:center 统一垂直居中，不受各链接盒高影响 */
+.menu a:not(:last-child)::after {
+  content: '/';
+  display: block;
+  margin: 0 5px 0 6.5px;      /* 左边多 1.5px，补掉 letter-spacing 的行尾空隙 */
+  letter-spacing: 0;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.24);   /* 独立指定颜色，hover 不会跟着变白 */
+}
+
+.menu a:hover { color: var(--white); }
+
+/* 当前所在页面：下划线用绝对定位的伪元素画在文字下面，
+   完全不参与布局，所以不会把文字顶偏 */
+.menu a.active {
+  color: var(--white);
+}
+.menu a.active > span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* ============ 竖屏：三条横线菜单按钮（宽屏隐藏） ============ */
+.menu-toggle {
+  display: none;
+  position: relative;
+  width: 34px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-toggle .bar {
+  position: absolute;
+  left: 6px; right: 6px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.85);
+  transition: transform .32s cubic-bezier(.2,.8,.3,1),
+              opacity .18s ease,
+              top .32s cubic-bezier(.2,.8,.3,1);
+}
+.menu-toggle .bar:nth-child(1) { top: 7px; }
+.menu-toggle .bar:nth-child(2) { top: 12.5px; }
+.menu-toggle .bar:nth-child(3) { top: 18px; }
+
+/* 展开时三条线收成一个叉 */
+.navbar.menu-open .menu-toggle .bar:nth-child(1) { top: 12.5px; transform: rotate(45deg); }
+.navbar.menu-open .menu-toggle .bar:nth-child(2) { opacity: 0; }
+.navbar.menu-open .menu-toggle .bar:nth-child(3) { top: 12.5px; transform: rotate(-45deg); }
+
+/* ============ 全站背景音乐：HOME 左侧小三角 / 迷你频谱 ============ */
+/* 三角与频谱条都绝对居中叠在按钮里，位置完全重合，
+   这样 GSAP 才能在两者之间做「缩放 + 旋转 + 淡入淡出」的形变过渡 */
+.bgm-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 18px;
+  margin-left: 18px;
+  margin-right: 20px;          /* 与第一个菜单项 HOME 拉开距离，别贴着 */
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bgm-tri {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0; height: 0;
+  margin: -5px 0 0 -4px;            /* 8×10 的三角形居中 */
+  border-style: solid;
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.8);
+  transform-origin: center center;
+  transition: border-left-color .2s ease;
+  will-change: transform, opacity;
+}
+.bgm-toggle:hover .bgm-tri { border-left-color: var(--white); }
+
+.bgm-bars {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  margin: -7px 0 0 -9px;            /* 18×14 居中（5 条 2px + 4 间隙 2px） */
+  opacity: 0;
+  visibility: hidden;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+.bgm-bars i {
+  display: block;
+  width: 2px;
+  height: 100%;
+  background: var(--white);
+  border-radius: 1px;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+.bgm-bars i:nth-child(2) { animation-duration: .7s;  animation-delay: -.20s; }
+.bgm-bars i:nth-child(3) { animation-duration: 1.1s; animation-delay: -.50s; }
+.bgm-bars i:nth-child(4) { animation-duration: .8s;  animation-delay: -.10s; }
+.bgm-bars i:nth-child(5) { animation-duration: 1s;   animation-delay: -.35s; }
+
+/* 有 GSAP 时：完全由 JS 补间驱动，关掉 CSS 过渡/关键帧避免互相打架 */
+.bgm-toggle.is-gsap .bgm-tri,
+.bgm-toggle.is-gsap .bgm-bars,
+.bgm-toggle.is-gsap .bgm-bars i { transition: none; }
+
+/* 无 GSAP 时的降级：纯 CSS 淡入淡出 + 关键帧跳动 */
+.bgm-toggle:not(.is-gsap) .bgm-bars { transition: opacity .2s ease; }
+.bgm-toggle:not(.is-gsap).is-playing .bgm-tri { opacity: 0; visibility: hidden; }
+.bgm-toggle:not(.is-gsap).is-playing .bgm-bars { opacity: 1; visibility: visible; }
+.bgm-toggle:not(.is-gsap).is-playing .bgm-bars i { animation: bgmBar .9s ease-in-out infinite alternate; }
+
+@keyframes bgmBar {
+  from { transform: scaleY(.22); }
+  to   { transform: scaleY(1); }
+}
+
+/* ============ 全站漂浮粒子 ============ */
+/* 固定在窗口上：位于内容之上（黑底处清晰可见）、状态栏之下，不拦截任何点击 */
+.bg-particles {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* ============ 首屏图片 ============ */
+/* hero 区域总高 200vh：前 100vh 是整屏图，之后随滚动上下裁切 */
+.hero {
+  height: 200vh;
+  position: relative;
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 可视区（裁切窗口）：宽度恒 100%，高度由 JS 从 100vh 收窄到 KEEP vh，
+   本身在视口里垂直居中 → 上下等量裁切 */
+.hero-frame {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  will-change: height;
+}
+
+/* 图片：铺满可视区并居中裁切，
+   可视区上下收窄时，图片中间那一条始终留在可视区中央 */
+.hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: grayscale(100%) contrast(1.08);   /* 黑白漫画感 */
+}
+
+/* 裁切窗口的上下边线（极简细线，强调"画面被裁切"） */
+.crop-edge {
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.38);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 15%;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: var(--white-dim);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+  transition: opacity 0.3s ease;
+}
+
+.scroll-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--white-dim);
+  animation: bob 2.2s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+}
+
+.scroll-hint .arrow { font-size: 15px; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+/* ============ 下方内容 ============ */
+.content {
+  position: relative;
+  z-index: 2;
+  background: var(--black);
+  padding: 120px 20px 0;
+  /* 至少一屏高：保证滑到底时上面的首屏图片已经完全离开视口（不再有残留） */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 方框去掉：不要边框、不要底色 */
+.panel {
+  width: 100%;              /* 在 flex 列父容器里明确撑满，再靠 max-width 收口 */
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 84px 64px;
+  background: none;
+  border: 0;
+}
+
+/* ---- 关于我：左方框头像 / 右代码编辑器，垂直居中对齐；切换器在整块正下方居中 ---- */
+.about {
+  flex: 1 1 auto;          /* 撑满下方内容区，让页脚落到最底部 */
+  display: flex;
+  flex-direction: column;   /* 纵向：上方是头像+文字的组合行，下方是切换器 */
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  --av-size: 300px;         /* 头像尺寸总控：文字块高度跟着它走 */
+}
+
+/* 头像 + 文字的组合行：横向居中，作为一整块对齐页面中心 */
+.about-row {
+  align-self: stretch;      /* 撑满 .about 的内容宽度，内部再居中头像+文字 */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 46px;
+  max-width: 100%;
+}
+
+.about-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--av-size);
+  height: var(--av-size);
+  border: 1px solid var(--line);   /* 方框 */
+  background: #111;
+  overflow: hidden;
+}
+
+.about-avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  /* 头像保持彩色（与全站黑白风区分，突出个人标识） */
+}
+
+/* 头像加载失败（比如没联网）时退化成首字母方块 */
+/* 头像「像素化 + 打印」入场：两层像素画布（黑白在下、彩色在上）叠加，
+   JS 用 clip-path 自上而下逐行揭开，彩色比黑白晚一点跟上 */
+.av-print {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.about-avatar.is-printing .av-print { opacity: 1; visibility: visible; }
+.av-px {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;          /* 画布只有 56×56，放大靠最近邻，才有方块感 */
+  -webkit-image-rendering: pixelated;
+}
+.av-px--mono { filter: grayscale(1) contrast(1.28) brightness(1.06); }
+.av-scan {
+  position: absolute;
+  left: 0; right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.35);
+  opacity: 0;
+}
+/* 进入像素模式后，原始平滑头像让位给像素版 */
+.about-avatar.is-pixel .about-avatar-img { opacity: 0; }
+
+.about-avatar.is-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 92px;
+  letter-spacing: 0;
+  color: var(--white-dim);
+}
+
+.about-text {
+  min-width: 0;
+  flex: 0 1 560px;          /* 不参与 flex 拉伸 → 头像 + 文字作为一整个组合居中，不被顶到两侧贴边 */
+  max-width: 560px;
+  height: var(--av-size);   /* 文字块高度精确等于头像：首行贴顶、末行贴底 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- 代码风格的「关于我」：行号 | 内容，无外框窗口 ---- */
+.code-block {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1.55;
+  flex: 1 1 auto;          /* 撑满 .about-text 的整高 */
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- 两位成员切换器：两个横杠，居中排布在头像+介绍的正下方 ---- */
+.people-switch {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  user-select: none;
+}
+.people-switch .ps-bar {
+  position: relative;
+  width: 34px;
+  height: 22px;             /* 扩大点击命中区，视觉横杠只有 2px */
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.people-switch .ps-bar::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(255, 255, 255, 0.24);
+  transition: background-color .28s ease, box-shadow .28s ease;
+}
+.people-switch .ps-bar:hover::before { background: rgba(255, 255, 255, 0.5); }
+.people-switch .ps-bar:focus-visible { outline: none; }
+.people-switch .ps-bar:focus-visible::before {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+/* 当前激活的横杠：变白 + 微微发光 */
+.people-switch .ps-bar.is-on::before {
+  background: var(--white);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+}
+
+.code-body {
+  padding: 0;
+  flex: 1 1 auto;          /* 撑满整个代码块高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;   /* 第一行贴顶、末行贴底，中间均匀分布 */
+}
+
+.code-line {
+  display: flex;
+  align-items: baseline;
+  flex: 0 0 auto;          /* 纵向不拉伸：每行按内容高度 */
+  min-width: 0;            /* 允许窄屏收缩，长注释能换行 */
+}
+.code-line .ln {
+  flex: 0 0 2.2em;
+  text-align: right;
+  color: rgba(179, 179, 179, 0.4);
+  user-select: none;
+}
+.code-line .sep {
+  flex: 0 0 1.5em;
+  text-align: center;
+  color: rgba(179, 179, 179, 0.28);
+  user-select: none;
+}
+.code-line .lc {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #e8e8e8;            /* 普通文字（含 // 注释行）颜色不变 */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 语法着色：C 与 Python 两套共用的 token 色 */
+.tk-pre { color: #c586c0; }   /* 预处理 #include / Python 的 import 等 */
+.tk-kw  { color: #569cd6; }   /* 关键字 int / return / def / if / raise 等 */
+.tk-fn  { color: #dcdcaa; }   /* 函数名 main / printf / SystemExit */
+.tk-str { color: #ce9178; }   /* 字符串 */
+.tk-cmt { color: #6a9955; }   /* 注释 // 与 #（VSCode 绿） */
+.tk-num { color: #b5cea8; }   /* 数字 */
+.tk-cls { color: #4ec9b0; }   /* 类名 / 异常名 */
+.tk-op  { color: #d4d4d4; }   /* 运算符 */
+
+/* 首行名字的可点击 GitHub 链接：保持注释绿，加下划线暗示可点 */
+.name-link {
+  color: #8fc07a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(143, 192, 122, 0.45);
+  transition: color .25s ease, border-color .25s ease;
+}
+.name-link:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 打字机光标（逐字出现时显示在行尾，闪烁） */
+.tk-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin: 0 0 -0.16em 2px;
+  background: #e8e8e8;
+  box-shadow: 0 0 6px rgba(232, 232, 232, 0.6);
+  vertical-align: baseline;
+  animation: caretBlink 1.05s steps(1, end) infinite;
+}
+@keyframes caretBlink {
+  0%, 50%  { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* 页脚 */
+.footer {
+  text-align: center;
+  padding: 48px 0 40px;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: rgba(179, 179, 179, 0.6);
+}
+
+.footer span { display: inline-block; }
+
+/* ============ 内页独立页脚区：友情链接（GitHub / STUDIO） ============ */
+/* 与站体同为黑底，仅 95% 不透明 + 极淡提亮，形成一个「比黑稍亮一点」的空间；
+   顶部一条细线划分，与上方内容之间留出很大的呼吸距离。 */
+.footer--links {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  /* ---- 尺寸总控：只改这几个变量就能调整整块大小 ---- */
+  --fl-scale: 1;                              /* ① 整体缩放：0.8 = 整块矮 20%，1.2 = 高 20% */
+  --fl-top: 500px;                            /* ② 与正文之间的距离（只挪位置，不影响块高） */
+  --fl-pad-top: calc(40px * var(--fl-scale));    /* 块顶 → 表头 */
+  --fl-head-gap: calc(46px * var(--fl-scale));   /* 表头 → 链接列表 */
+  --fl-row: calc(9px * var(--fl-scale));         /* 每行链接的上下留白 */
+  --fl-copy-gap: calc(60px * var(--fl-scale));  /* 列表 → 版权行 */
+  --fl-pad-bottom: calc(30px * var(--fl-scale)); /* 版权行 → 块底 */
+
+  margin: 0;
+  margin-top: var(--fl-top);
+  padding-top: var(--fl-pad-top);
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--white-dim);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052) 0%, rgba(255, 255, 255, 0.022) 100%),
+    rgba(0, 0, 0, 0.95);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fl-band {
+  width: 100%;
+  max-width: 1120px;          /* 与内页内容区同宽，左右对齐 */
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* 表头：左标题 + 右数量，下方一条细分隔线（沿用站内小标签语气） */
+.fl-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 20px;
+  margin-bottom: var(--fl-head-gap);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+.fl-title {
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--white);
+}
+.fl-sub {
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.30);
+}
+.fl-count {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.24);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 4 列 × 5 行，按列向下排；每列内部左对齐 */
+.fl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  column-gap: 48px;
+  row-gap: 0;
+}
+
+/* 纯文字链接：无边框、无底色 */
+.fl-link {
+  display: flex;
+  align-items: baseline;
+  justify-self: start;
+  max-width: 100%;
+  padding: var(--fl-row) 0;
+  line-height: 1.3;
+  text-decoration: none;
+  color: #c4c4c4;
+  transition: color .28s ease, transform .28s cubic-bezier(.22, .61, .36, 1);
+}
+.fl-name {
+  position: relative;
+  font-size: 13px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* hover：文字转白，编号提亮，整行右移一点点 */
+.fl-link:hover {
+  color: var(--white);
+  transform: translateX(3px);
+}
+.fl-link:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 4px;
+}
+
+/* 版权行：这块空间的收尾，和首页页脚同一语气 */
+.fl-copy {
+  margin-top: var(--fl-copy-gap);
+  padding: 0 40px var(--fl-pad-bottom);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.34);
+}
+
+@media (max-width: 980px) {
+  .fl-band { padding: 0 28px; }
+  .fl-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(10, auto);
+    column-gap: 40px;
+  }
+  .footer--links { --fl-top: 230px; --fl-pad-top: calc(38px * var(--fl-scale)); }
+  .fl-copy { padding: 0 28px calc(36px * var(--fl-scale)); }
+}
+
+@media (max-width: 560px) {
+  .fl-band { padding: 0 20px; }
+  .fl-grid { column-gap: 24px; }
+  .fl-head { margin-bottom: calc(24px * var(--fl-scale)); }
+  .fl-sub { display: none; }
+  .footer--links { --fl-top: 170px; --fl-pad-top: calc(32px * var(--fl-scale)); }
+  .fl-name { font-size: 12px; letter-spacing: .02em; }
+  .fl-copy { padding: 0 20px calc(34px * var(--fl-scale)); letter-spacing: 3px; }
+}
+
+/* ============ STUDIO 页面（专辑） ============ */
+.music-page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;          /* 水平居中 */
+  justify-content: center;      /* 内容整体垂直居中（内容高时自动撑开，不裁切） */
+  padding: 120px 40px 80px;
+}
+/* 封面规格文字下方的直线音频条（点一下播放 / 暂停 Mirror） */
+.soundbar {
+  width: 100%;
+  margin-top: 26px;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.sb-line {
+  position: relative;
+  display: block;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background-color .25s ease;
+}
+/* 进度条视觉只有 1px，但扩大可拖拽的命中区域（上下各约 9px） */
+.sb-line::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: -9px;
+  height: 19px;
+  cursor: pointer;
+}
+.soundbar:hover .sb-line,
+.soundbar:focus-visible .sb-line { background: rgba(255, 255, 255, 0.45); }
+.sb-fill {
+  position: absolute;
+  left: 0; top: 0;
+  width: 0;
+  height: 1px;
+  background: var(--white);
+}
+.sb-knob {
+  position: absolute;
+  left: 0; top: 50%;
+  width: 7px; height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  opacity: 0.55;
+  transition: opacity .25s ease, left .2s linear;
+}
+.soundbar[data-state="idle"] .sb-knob { opacity: 0; }
+.soundbar:hover .sb-knob,
+.soundbar[data-state="playing"] .sb-knob,
+.soundbar[data-state="paused"] .sb-knob { opacity: 1; }
+.sb-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 11px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  line-height: 1.4;
+  color: var(--white-dim);
+  text-transform: uppercase;
+}
+.sb-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color .25s ease;
+}
+.soundbar[data-state="playing"] .sb-title { color: var(--white); }
+.sb-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.sb-icon {
+  width: 12px;
+  text-align: center;
+  color: var(--white);
+  font-size: 9px;
+  letter-spacing: 0;
+  display: inline-block;
+  transform-origin: center;
+  transition: opacity .22s ease;
+}
+/* 播放/暂停切换时：图标放大回弹一下（脉冲），让切换有过渡而不是硬切 */
+.sb-icon.is-pulse {
+  animation: sbIconPulse .38s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes sbIconPulse {
+  0%   { transform: scale(1);   opacity: 0.25; }
+  45%  { transform: scale(1.65); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.sb-time {
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+/* 播放时间轴上方的实时频谱条 */
+.sb-spectrum {
+  display: block;
+  width: 100%;
+  height: 30px;
+  margin-bottom: 12px;
+}
+/* 起播被拦截 / 播放器没加载：文案略提亮，提示去点上面的 Spotify */
+.soundbar[data-state="blocked"] .sb-title,
+.soundbar[data-state="unavailable"] .sb-title { color: var(--white); }
+.album {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  align-items: stretch;           /* 两列等高：右侧列表底部才能落到左侧播放条底边 */
+  gap: 56px;
+}
+.album-left {
+  flex: 0 0 auto;
+  width: 320px;
+  max-width: 100%;
+}
+.album-cover {
+  width: 320px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  background: #111;
+}
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.album-meta {
+  margin-top: 22px;
+  width: 320px;
+  max-width: 100%;
+}
+.meta-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.meta-head span {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);  /* 两段细分割线 */
+  white-space: nowrap;
+}
+.meta-list { margin: 14px 0 0; }
+.meta-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;   /* 固定标签列宽 → 各行值对齐成列 */
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: 1.5;
+}
+.meta-row dt {
+  white-space: nowrap;
+  color: var(--white-dim);
+  text-transform: uppercase;
+}
+.meta-row dt::after { content: ':'; }
+.meta-row dd { margin: 0; color: var(--white); text-align: right; }
+.meta-sub { display: block; color: var(--white-dim); text-align: right; }
+.album-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;         /* 让列表纵向撑满，底部与左列对齐 */
+}
+.album-title {
+  /* 行盒顶到大写字母顶还有约 0.275em 空白，上移这一截，封面顶边才与
+     Everything 的字形顶边真正齐平；等量 margin-bottom 把后续内容顶回原位 */
+  margin: -0.275em 0 0.275em;
+  font-size: 40px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.album-sub {
+  margin: 10px 0 0;
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: var(--white-dim);
+  text-transform: uppercase;
+}
+.disc-label {
+  margin: 34px 0 14px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.tracks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;  /* 行距均分剩余高度 → 第 12 行底边正好贴齐左列底部 */
+  flex: 1 1 auto;
+}
+.track {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: baseline;
+  gap: 18px;
+  padding: 14px 0;               /* 行距略收，好让 12 行正好填满左列高度 */
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.track:last-child { border-bottom: none; }
+.track:hover { background: rgba(255, 255, 255, 0.05); }
+.track:active { background: rgba(255, 255, 255, 0.08); }
+/* 没有音频连接的曲目（02–08）：不显示可点击光标、不响应悬停高亮 */
+.track:not([data-play]):not([data-song]) { cursor: default; }
+.track:not([data-play]):not([data-song]):hover,
+.track:not([data-play]):not([data-song]):active { background: none; }
+.track.active .t-title { color: #fff; }
+.t-no {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--white-dim);
+}
+.t-title {
+  font-size: 12px;               /* 曲名字号与 Tsukishiro Hikari 一致 */
+  letter-spacing: 1px;
+  color: var(--white);
+}
+.t-artist {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--white-dim);
+  text-transform: uppercase;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 窄屏 / 竖屏：封面在上、曲目在下
+   封面放大到内容宽度（超宽屏封顶 440px 并居中），
+   规格表则铺满整行，标签贴页面左边、数值贴页面右边 */
+@media (max-width: 720px) {
+  .album {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .album-left { width: 100%; }
+  .album-cover {
+    width: 100%;
+    max-width: 440px;              /* 平板上别让封面大到离谱 */
+    margin-inline: auto;
+  }
+  .album-meta {
+    width: 100%;
+    margin-top: 18px;
+  }
+  .meta-row { grid-template-columns: 112px 1fr; gap: 8px; }
+  .album-title { font-size: 30px; }
+  /* 竖屏是上下堆叠，列表不再需要纵向撑满左列 */
+  .tracks { flex: 0 0 auto; }
+}
+
+@media (max-width: 560px) {
+  .music-page { padding: 92px 20px 56px; }   /* 左右收到 20px，和页脚同一边距 */
+  .album-cover { max-width: 100%; margin-inline: 0; }  /* 手机上封面与规格表同宽，左右都贴边 */
+}
+
+/* ============ 底部播放器条 ============ */
+.music-player {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.92);
+  border-top: 1px solid var(--line);
+  transform: translateY(110%);
+  transition: transform .35s ease;
+}
+.music-player.open { transform: translateY(0); }
+.mp-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 980px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mp-now {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--white-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mp-inner iframe {
+  flex: 0 0 auto;
+  border: 0;
+  display: block;
+}
+.mp-link {
+  flex: 0 0 auto;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--white-dim);
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  padding: 7px 11px;
+  border-radius: 2px;
+  white-space: nowrap;
+  transition: color .2s ease, border-color .2s ease;
+}
+.mp-link:hover { color: var(--white); border-color: var(--white); }
+.mp-close {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--white-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease;
+}
+.mp-close:hover { color: var(--white); border-color: var(--white); }
+
+/* ============ GitHub 页面 ============ */
+.gh-page {
+  /* 让开固定的状态栏 */
+  padding: 110px 40px 0;
+  max-width: 1120px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;               /* 盖在等高线背景（z-index:1）之上 */
+}
+
+/* 上排：左资料 / 右贡献表 */
+.gh-top {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+/* grid 子项默认 min-width: auto，会被贡献表的 min-content 撑破整页宽度 */
+.gh-top > * { min-width: 0; }
+
+/* ---- 两位成员切换器：固定在视口左侧、垂直居中，不随滚动移动，不挤占内容 ---- */
+.gh-switch {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 60;
+  user-select: none;
+}
+.gh-switch .gs-bar {
+  position: relative;
+  width: 26px;
+  height: 34px;             /* 扩大点击命中区，视觉竖条只有 2px 宽 */
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 轨道（灰色竖线） */
+.gh-switch .gs-track {
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background-color .28s ease, box-shadow .28s ease;
+}
+/* 进度填充（白色竖线，从上往下跑满，由 JS 控制 scaleY） */
+.gh-switch .gs-fill {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  margin-left: -1px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--white);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: scaleY(0);
+  transform-origin: center top;
+}
+.gh-switch .gs-bar:hover .gs-track { background: rgba(255, 255, 255, 0.5); }
+.gh-switch .gs-bar:focus-visible { outline: none; }
+.gh-switch .gs-bar:focus-visible .gs-track {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+/* 当前激活的条：轨道整体变白，进度填充在其上从底往上跑 */
+.gh-switch .gs-bar.is-on .gs-track {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* ---- 左中：头像 + 名字 ---- */
+.gh-avatar {
+  width: 176px;
+  height: 176px;
+  border-radius: 50%;
+  display: block;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: #111;
+  margin-bottom: 26px;
+}
+
+/* 头像加载失败时的首字母占位 */
+.gh-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  letter-spacing: 0;
+  color: var(--white-dim);
+}
+
+.gh-name {
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  line-height: 1.3;
+}
+
+.gh-login {
+  font-size: 15px;
+  color: var(--white-dim);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.gh-bio {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--white-dim);
+  letter-spacing: 1px;
+  margin: 18px 0 20px;
+}
+
+.gh-link {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--white-dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 3px;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.gh-link:hover { color: var(--white); border-color: var(--white); }
+
+/* ---- 右：贡献表 ---- */
+.gh-graph-wrap {
+  border: 1px solid var(--line);
+  background: #0b0b0b;
+  padding: 22px 24px 18px;
+  min-width: 0;
+}
+
+.gh-graph-head {
+  font-size: 13px;
+  color: var(--white-dim);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.gh-graph-head strong { color: var(--white); font-weight: 400; }
+
+/* 贡献图随卡片宽度自适应缩放（SVG 等比缩放），不再出现横向滚动条 */
+.gh-graph-scroll { overflow: hidden; }
+
+/* 远程真实贡献图（ghchart.rshah.org，见 2016rshah/githubchart-api）
+   —— 基色用 GitHub 绿，但服务把"无贡献"固定做成浅灰 #EEEEEE；
+      用 invert + hue-rotate(140) + saturate 把它变成 GitHub 深色主题同款：
+      空格 → 深灰黑，贡献越多 → 越亮的绿（保留真实数据，只改配色）
+   —— width:100% 让图随卡片宽度拉伸，窄屏自动等比缩小，彻底避免横向滚动条 */
+.gh-chart {
+  display: none;              /* 加载成功前先藏起来，由 JS 显示；失败则一直不显示 */
+  width: 100%;
+  height: auto;
+  filter: invert(1) hue-rotate(140deg) saturate(3);
+}
+
+.gh-graph {
+  --cell: 10px;
+  --gap: 2px;
+  --step: calc(var(--cell) + var(--gap));
+  min-width: min-content;
+}
+
+/* 月份行 */
+.gh-months {
+  display: flex;
+  margin-left: calc(var(--step) * 1.6);   /* 让开星期那一列 */
+  margin-bottom: 5px;
+}
+
+.gh-months span {
+  width: var(--step);
+  flex: 0 0 var(--step);
+  font-size: 10px;
+  color: var(--white-dim);
+  white-space: nowrap;
+}
+
+/* 月份文字比列宽，允许溢出但不撑开列 */
+.gh-months span:not(:empty) { overflow: visible; }
+
+.gh-body { display: flex; gap: 6px; }
+
+/* 星期列 */
+.gh-days {
+  display: grid;
+  grid-template-rows: repeat(7, var(--step));
+  width: calc(var(--step) * 1.6 - 6px);
+  flex: 0 0 auto;
+}
+
+.gh-days span {
+  font-size: 10px;
+  color: var(--white-dim);
+  line-height: var(--cell);
+}
+
+/* 格子 */
+/* flex-shrink: 0 —— 否则列宽不够时格子会被压扁挤在一起 */
+.gh-cells { display: flex; gap: var(--gap); flex: 0 0 auto; }
+
+.gh-col {
+  display: grid;
+  grid-template-rows: repeat(7, var(--cell));
+  gap: var(--gap);
+  flex: 0 0 auto;
+}
+
+.gh-col i {
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: 2px;
+  display: block;
+}
+
+/* 黑白灰阶：0 最少 → 4 最多 */
+/* 本地兜底图 + 图例：GitHub 深色主题同款（空格深灰黑 → 越贡献越亮的绿） */
+.lv0 { background: #161b22; }
+.lv1 { background: #0e4429; }
+.lv2 { background: #006d32; }
+.lv3 { background: #26a641; }
+.lv4 { background: #39d353; }
+
+/* 图例 */
+.gh-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 10px;
+  color: var(--white-dim);
+}
+
+.gh-legend i { width: 10px; height: 10px; border-radius: 2px; display: block; }
+.gh-legend span { margin: 0 2px; }
+
+/* ---- 下排：项目 ---- */
+.gh-repos-sec { margin-top: 76px; }
+
+.gh-sec-title {
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 8px;
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.gh-repos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.gh-repo {
+  display: block;
+  border: 1px solid var(--line);
+  background: #0b0b0b;
+  padding: 22px 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+
+.gh-repo:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: #121212;
+  transform: translateY(-3px);
+}
+
+.gh-repo-name {
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--white);
+}
+
+.gh-repo-desc {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--white-dim);
+  letter-spacing: 1px;
+  margin: 12px 0 20px;
+  min-height: 3.6em;
+}
+
+.gh-repo-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--white-dim);
+}
+
+.gh-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--white-dim);
+  display: inline-block;
+}
+
+.gh-stars { margin-left: auto; }
+
+/* ============ 移动端 ============ */
+@media (max-width: 720px) {
+  /* 竖屏：品牌让位，logo 居中，右侧三条横线；菜单点开变下拉 */
+  .navbar {
+    padding: 11px 14px;
+    grid-template-columns: 34px 1fr 34px;
+  }
+  .brand { display: none; }
+  .logo { grid-column: 2; }
+  .logo img { height: 13px; }
+  .menu-toggle {
+    display: block;
+    grid-column: 3;
+    justify-self: end;
+  }
+  /* 竖屏时 bgm.js 会把背景音乐按钮挪到导航栏，占最左一格 */
+  .navbar .bgm-toggle {
+    grid-column: 1;
+    grid-row: 1;                /* 显式定行，否则自动排布会把它挤到第二行 */
+    justify-self: start;
+    margin-left: 0;
+    margin-right: 0;            /* 竖屏在导航栏最左格，不需要给 HOME 让位 */
+  }
+  .menu {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    justify-self: stretch;      /* 绝对定位的 grid 子项仍会吃 justify-self:end，这里必须覆盖 */
+    flex-direction: column;
+    align-items: stretch;
+    padding: 4px 20px 10px;
+    background: rgba(0, 0, 0, 0.97);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity .24s ease,
+                transform .3s cubic-bezier(.2,.8,.3,1),
+                visibility .24s;
+  }
+  .navbar.menu-open .menu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+  .menu a {
+    display: block;
+    height: auto;                 /* 下拉是纵向列表，行高交给 padding 决定 */
+    font-size: 12px;
+    letter-spacing: 2.5px;
+    line-height: 1.5;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .menu a:last-child { border-bottom: 0; }
+  .menu a:not(:last-child)::after { content: none; }   /* 竖屏不再用斜杠分隔 */
+  .menu a.active > span::after { content: none; }      /* 竖屏用行分隔线，不再画下划线 */
+  .content { padding: 100px 20px 0; }
+  .panel { padding: 64px 28px; }
+  /* 竖屏：改为上下堆叠居中 */
+  .about { gap: 26px; text-align: center; --av-size: 200px; }
+  .about-row { flex-direction: column; gap: 30px; }
+  .about-text { text-align: center; max-width: 520px; margin: 0 auto; height: auto; }
+  .about-avatar { width: 200px; height: 200px; }
+  .about-avatar.is-fallback { font-size: 64px; }
+  .code-block { font-size: 15px; line-height: 1.7; height: auto; text-align: left; }
+  .code-body { justify-content: flex-start; }   /* 堆叠时不再贴顶贴底，回归自然行距 */
+
+  /* GitHub 页面：贡献表与项目改为单列 */
+  .gh-page { padding: 96px 20px 0; }
+  .gh-top { grid-template-columns: 1fr; gap: 34px; }
+  /* 竖屏：切换器固定在顶部水平居中，条横过来（横条，进度从左往右跑） */
+  .gh-switch {
+    position: fixed;
+    left: 50%;
+    top: 60px;
+    transform: translateX(-50%);
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+  .gh-switch .gs-bar { width: 34px; height: 26px; }
+  .gh-switch .gs-track {
+    left: 0; right: 0;
+    top: 50%;
+    width: auto; height: 2px;
+    margin-left: 0; margin-top: -1px;
+  }
+  .gh-switch .gs-fill {
+    left: 0;
+    top: 50%;
+    width: 100%; height: 2px;
+    margin-left: 0; margin-top: -1px;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  .gh-avatar { width: 108px; height: 108px; }
+  .gh-graph-wrap { padding: 18px 16px 14px; }
+  .gh-graph { --cell: 5px; --gap: 1px; }   /* 窄屏缩小单元格，本地兜底图也能装下不溢出 */
+  .gh-repos { grid-template-columns: 1fr; }
+  .gh-sec-title { font-size: 16px; letter-spacing: 5px; }
+}
+
+
+/* ============ STUDIO 页：花带下方的作品图片墙 ============ */
+/* works.js 按每张图的原始宽高比排成瀑布流（决定列位与高度），
+   横向作品按比例随机跨两列，图片一律完整显示，只有超长竖图会限高裁一点。 */
+.works {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1400px;                   /* 比专辑块更宽，作品能铺开 */
+  margin: clamp(56px, 8vh, 104px) auto 0;
+  padding: 0 clamp(18px, 3.2vw, 44px);
+}
+.works-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+.works-title {
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--white);
+}
+.works-sub {
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.30);
+}
+.works-count {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.24);
+  font-variant-numeric: tabular-nums;
+}
+
+.works-grid {
+  position: relative;                  /* 里面全部绝对定位，位置由 works.js 算 */
+  width: 100%;
+  height: 0;                           /* 实际高度等布局完由脚本写上 */
+}
+.work {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #0b0b0b;
+  /* 用内阴影画 1px 描边，不占尺寸 → 图片按比例算出的高度不会被边框挤变形 */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.45s ease;
+}
+.work img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;                   /* 尺寸已按图片比例算好，正常不会裁到 */
+  color: transparent;                  /* 图没到时不要露出 alt 文字 */
+  background: #101010;
+  filter: grayscale(0.45) brightness(0.92) contrast(1.02);  /* 默认略褪色，悬停才完全还原 */
+  transition: filter 0.55s ease;
+}
+.work:hover {
+  z-index: 3;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+.work:hover img {
+  filter: none;                        /* 悬停还原彩色（不放大，避免裁到画面） */
+}
+.work-no {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+.work:hover .work-no { opacity: 1; }
+
+/* 入场：逐块上浮。is-js 由 works.js 注入内容后加上，
+   万一脚本没跑，图片也不会永远停在隐形状态 */
+.works-grid.is-js .work {
+  opacity: 0;
+  transform: translateY(16px) scale(0.985);
+  transition: opacity 0.75s ease, transform 0.85s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.works-grid.is-js .work:not(.is-in) { transition-delay: var(--d, 0s); }
+.works-grid.is-js .work.is-in { opacity: 1; transform: none; }
+
+/* ============ STUDIO 下方：封面花带（两条斜带交叉成不规则 X） ============ */
+/* 用 assets/covers 里的封面缩略图拼两条长带，宽度远超视口 → 从页面两侧伸出，
+   两条带的倾角与垂直位置都不同，交叉处自然错开，形成一个不标准的 X。 */
+.cover-x {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  /* 高度随视口宽度增长：保证两条斜带旋转后的上下端点始终落在框内，不被裁切 */
+  height: max(380px, calc(100vw * 0.35 + 240px));
+  margin: clamp(40px, 6vh, 90px) 0 0;
+  overflow: hidden;            /* 只裁左右两侧 → 「从页面两边伸进来」 */
+  pointer-events: none;
+}
+
+/* 斜带本体：撑满容器高度并垂直居中，旋转以「容器中心」为原点，
+   图片始终落在容器中央线上，旋转后不会上下被裁 */
+.cx-band {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 112vw;
+  margin-left: -56vw;
+  display: flex;
+  align-items: center;
+  will-change: transform;
+
+  /* 入场遮罩：--cx-edge 是「已显示部分」的推进位置（-16 = 全透明，100 = 全显示）。
+     16% 宽的是渐变过渡带，所以被推进线盖住的封面是慢慢化出来，不会被硬切一半。 */
+  --cx-edge: 100;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--cx-edge) * 1%), transparent calc(var(--cx-edge) * 1% + 16%));
+  mask-image: linear-gradient(90deg, #000 calc(var(--cx-edge) * 1%), transparent calc(var(--cx-edge) * 1% + 16%));
+}
+.cx-band--a { transform: rotate(-17deg); }
+.cx-band--b {
+  top: 110px;                  /* 向下错位 → 两条带交叉点偏离正中，形成不标准的 X */
+  transform: rotate(12deg);
+  /* 从右往左推进 */
+  -webkit-mask-image: linear-gradient(270deg, #000 calc(var(--cx-edge) * 1%), transparent calc(var(--cx-edge) * 1% + 16%));
+  mask-image: linear-gradient(270deg, #000 calc(var(--cx-edge) * 1%), transparent calc(var(--cx-edge) * 1% + 16%));
+}
+
+.cx-track {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 16px);
+  width: max-content;
+  will-change: transform;      /* 滚动由 ribbon.js 逐帧写 transform，可平滑加减速 */
+}
+
+.cx-track img {
+  flex: 0 0 auto;
+  width: clamp(88px, 9.5vw, 170px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 5px;
+  opacity: 0.9;
+  filter: saturate(0.82) brightness(0.88) contrast(1.06);
+  transition: opacity .4s ease, filter .4s ease;
+  pointer-events: auto;        /* 悬浮检测需要，容器本身是 pointer-events:none */
+}
+.cx-band--a .cx-track img { box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55); }
+.cx-band img:hover {
+  opacity: 1;
+  filter: saturate(1.06) brightness(1.08) contrast(1.02);
+}
+
+@media (max-width: 720px) {
+  .cover-x { height: max(260px, calc(100vw * 0.55 + 100px)); }
+  .cx-band { width: 128vw; margin-left: -64vw; }
+  .cx-band--b { top: 66px; }
+  .cx-track img { width: clamp(72px, 20vw, 104px); }
+}
+
+/* 入场起点：遮罩完全推出去，两条带都看不见 */
+.cover-x.cx-anim .cx-band { --cx-edge: -16; }
+
+/* ============ ARCHIVE 页：打字入场 + 等高线背景 + 粒子 logo ============ */
+/* 结构：左列文字（打字） / 右列粒子 logo；背景是固定全屏的等高线画布 */
+.archive-page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: 148px 40px 110px;
+}
+
+/* 等高线背景：固定铺满视口，位于内容之下；文字左移时 JS 加 .is-on 淡入，
+   同时画布内部自己从右往左「擦」出一条条等值线（见 archive.js 的 draw） */
+.arc-contours {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+  /* 上下边缘压暗一点，别和导航栏抢注意力 */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .3) 0%, #000 15%, #000 86%, rgba(0, 0, 0, .28) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .3) 0%, #000 15%, #000 86%, rgba(0, 0, 0, .28) 100%);
+}
+.arc-contours.is-on { opacity: 1; }
+
+/* 等高线背景（独立版，供 GitHub 页复用）：固定铺满视口、位于内容之下、缓慢流动 */
+.bg-contours {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .3) 0%, #000 15%, #000 86%, rgba(0, 0, 0, .28) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .3) 0%, #000 15%, #000 86%, rgba(0, 0, 0, .28) 100%);
+}
+.bg-contours.is-on { opacity: 1; }
+
+.arc-grid {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(300px, 1.08fr);
+  align-items: center;
+  gap: clamp(36px, 5vw, 84px);
+}
+.arc-text {
+  min-width: 0;
+  container-type: inline-size;   /* 标题字号按「这一列的宽度」算，不按视口 */
+}
+
+.arc-kicker {
+  font-size: 10px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+}
+.arc-title {
+  margin: 24px 0 26px;
+  /* 字号按列宽给：20cqw ≈ 538px 列宽下的 108px，一整行刚好放下 ARCHIVE；
+     不支持容器查询的浏览器退回按视口算的 vw 版本 */
+  font-size: clamp(46px, 8.6vw, 108px);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: .02em;
+  color: var(--white);
+}
+.arc-desc {
+  /* 「欢迎你加入我们」是这一页唯一的一句人话，字号给足 */
+  font-size: 21px;
+  line-height: 1.85;
+  letter-spacing: 3.2px;
+  color: var(--white-dim);
+}
+.arc-rule {
+  width: min(300px, 100%);
+  height: 1px;
+  margin-top: 34px;
+  background: var(--line);
+}
+
+/* ---- 联系方式：圆形按钮（邮箱 / GitHub / 哔哩哔哩 / QQ） ----
+   链接先占位，后面把 href 换成自己的就行；图标是内联 SVG 描边，跟站点线条风格一致 */
+.arc-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  opacity: 0;                       /* 由 archive.js 在打完字后淡入 */
+}
+html:not(.js-on) .arc-social,
+.arc-social.is-in { opacity: 1; }
+.arc-soc {
+  --s: 42px;
+  width: var(--s);
+  height: var(--s);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .02);
+  color: rgba(255, 255, 255, .6);
+  text-decoration: none;
+  /* 用独立的 translate / scale 属性做悬浮，而不是 transform ——
+     archive.js 的 FLIP 会用 transform 推这些按钮，两者分开互不打架 */
+  transition: color .32s ease, background-color .32s ease,
+              border-color .32s ease, translate .32s cubic-bezier(.2, .8, .2, 1),
+              scale .22s ease;
+}
+.arc-soc svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.arc-soc:hover,
+.arc-soc:focus-visible {
+  color: #000;
+  background: #fff;
+  border-color: #fff;
+  translate: 0 -2px;
+  outline: none;
+}
+.arc-soc:active { translate: 0 0; scale: .94; }
+
+/* ---- 打字：每个字一个 span，JS 逐个点亮；没有 JS 时原样显示 ---- */
+.arc-type {
+  display: inline-block;      /* 光标用绝对定位挂到它的右侧，不占排版宽度 */
+  position: relative;
+  max-width: 100%;
+  white-space: pre-wrap;
+}
+.arc-ch { opacity: 0; }
+html:not(.js-on) .arc-ch { opacity: 1; }
+.arc-type.is-done .arc-ch { opacity: 1; }
+
+/* 光标：独立元素，JS 每帧把它挪到「已经打出来的最后一个字」后面。
+   不用 ::after 是因为它只能贴在整行的末尾，而字符是提前占好位的 */
+.arc-caret {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-46%);
+  width: var(--caret, 1px);
+  height: .8em;
+  background: rgba(255, 255, 255, .88);
+  opacity: 0;
+  pointer-events: none;
+}
+.arc-type.is-typing .arc-caret {
+  opacity: 1;
+  animation: arcCaret .82s steps(1, end) infinite;
+}
+@keyframes arcCaret { 50% { opacity: 0; } }
+
+@supports (font-size: 1cqw) {
+  .arc-title { font-size: clamp(44px, 20cqw, 108px); }
+}
+
+/* 大标题的光标加粗一点，否则细得像根头发 */
+.arc-title .arc-type { --caret: 2px; }
+
+/* ---- 粒子 logo ---- */
+.arc-visual { position: relative; width: 100%; }
+/* 背后一层极淡的光晕，让白点在黑底上有呼吸感 */
+.arc-visual::before {
+  content: "";
+  position: absolute;
+  inset: -16% -10%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, .06), rgba(255, 255, 255, 0) 68%);
+  opacity: 0;
+  transition: opacity 1.1s ease;
+  pointer-events: none;
+}
+.arc-visual.is-on::before { opacity: 1; }   /* 和粒子一起亮起来 */
+.arc-logo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 810.71 / 369.26;
+}
+/* 采样失败（file:// 画布被污染）时退回原 SVG */
+.arc-logo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .7s ease;
+}
+.arc-logo-img.is-shown { opacity: .92; }
+
+@media (max-width: 820px) {
+  .archive-page { padding: 130px 28px 96px; }
+  .arc-grid { grid-template-columns: 1fr; gap: 46px; }
+  .arc-visual { max-width: min(560px, 100%); }
+  .arc-title { font-size: clamp(46px, 11vw, 86px); }
+  .arc-desc { font-size: 18px; letter-spacing: 2.6px; }
+}
+@media (max-width: 560px) {
+  .archive-page { padding: 118px 20px 84px; }
+  .arc-kicker { font-size: 9px; letter-spacing: 3.2px; }
+  .arc-title { font-size: clamp(40px, 13.6vw, 64px); margin: 18px 0 20px; }
+  .arc-desc { font-size: 16px; letter-spacing: 2.2px; }
+  .arc-rule { margin-top: 26px; }
+  .arc-social { gap: 10px; margin-top: 24px; }
+  .arc-soc { --s: 38px; }
+  .arc-soc svg { width: 15px; height: 15px; }
+  .arc-visual { max-width: 100%; }
+}
+
+/* ---- 阶段 1：三行文字先居中摆在页面正中（左移前） ----
+   .arc-center 由 archive.js 在开始打字时加上、左移前去掉。
+   上下内边距取一样，视觉中心才真的落在视口中线上；logo 先不占位，
+   文字块只按自身高度居中。 */
+.archive-page.arc-center {
+  padding-bottom: 148px;
+}
+.archive-page.arc-center .arc-text {
+  text-align: center;
+}
+.archive-page.arc-center .arc-rule {
+  margin-left: auto;
+  margin-right: auto;
+}
+.archive-page.arc-center .arc-visual {
+  display: none;
+}
+@media (max-width: 820px) {
+  .archive-page.arc-center { padding-bottom: 130px; }
+}
+@media (max-width: 560px) {
+  .archive-page.arc-center { padding-bottom: 118px; }
+}
+
+/* ===== 作品图片墙的窄屏适配（放在文件末尾，避免被上面的基础样式覆盖） =====
+   列数由 works.js 按容器宽度决定（6/5/4/3/2 列），这里只管留白和字号。 */
+@media (max-width: 720px) {
+  .works { padding: 0 20px; margin-top: 64px; }
+  .works-head { padding-bottom: 12px; margin-bottom: 14px; }
+}
+@media (max-width: 560px) {
+  .works { padding: 0 16px; margin-top: 56px; }
+  .works-title { font-size: 11px; letter-spacing: 4px; }
+}
+
+/* ============================================================
+   ARCHIVE 页 · 图片册
+   三排横向长条贯穿整幅宽度；高度统一、宽度按各自比例自然拼接。
+   滚动进度由 gallery.js 绑到 transform 上，页面停图就停。
+   ============================================================ */
+.arc-gallery {
+  position: relative;
+  z-index: 2;
+  /* 就是一屏，不额外撑长文档：图片横向走多少，全交给滚动进度 */
+  height: auto;
+  /* 顶部一道很轻的渐隐，只用来削掉上一屏等高线的硬边 */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, #000 8vh);
+}
+
+.arc-gal-stage {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(20px, 3.6vh, 44px);
+  padding: clamp(24px, 6vh, 64px) 0;
+  overflow: hidden;
+}
+
+/* ---- 标题行 ---- */
+.arc-gal-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 clamp(20px, 4.4vw, 64px);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.arc-gal-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.arc-gal-kicker {
+  font-size: 10px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+}
+.arc-gal-title {
+  font-size: clamp(22px, 3.2vw, 34px);
+  font-weight: 400;
+  letter-spacing: 8px;
+  line-height: 1;
+  color: var(--white);
+}
+.arc-gal-meta {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(14px, 2.4vw, 32px);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.34);
+  white-space: nowrap;
+}
+.arc-gal-count b {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 1px;
+}
+.arc-gal-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 往下掉的小短横，提示「这一块是要滚的」 */
+.arc-gal-hint i {
+  width: 1px;
+  height: 14px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  animation: arcGalHint 1.9s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+@keyframes arcGalHint {
+  0%, 100% { transform: translateY(-3px); opacity: .2; }
+  45%      { transform: translateY(3px);  opacity: .9; }
+}
+
+/* ---- 三排横条 ---- */
+.arc-gal-rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.3vh, 16px);
+  /* 两侧淡出，看起来像是从画外滑进来的长条，而不是被裁断 */
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0, #000 6%, #000 94%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0) 0, #000 6%, #000 94%, rgba(0,0,0,0) 100%);
+}
+.arc-gal-row {
+  /* 三排统一高度：横竖幅都一样高，宽度各按比例走 */
+  --h: clamp(108px, 18vh, 200px);
+  height: var(--h);
+  overflow: hidden;
+  display: flex;
+}
+.arc-gal-track {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(6px, .7vw, 12px);
+  height: 100%;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.arc-gal-item {
+  position: relative;
+  flex: 0 0 auto;
+  height: 100%;
+  width: calc(var(--h) * var(--ar, 1.4));
+  overflow: hidden;
+  background: #0e0e0e;
+}
+.arc-gal-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* 平时压一点点，别让彩色插画把整页的黑白基调顶掉；指上去恢复原样 */
+  filter: saturate(.92) brightness(.9);
+  transition: opacity .8s ease, filter .45s ease;
+}
+.arc-gal-item.is-in img { opacity: 1; }
+.arc-gal-item:hover img { filter: none; }
+
+/* 相册后面紧跟页脚：那 500px 的空档是给正文留呼吸的，相册自己就是满幅黑，
+   留着只会露出一大片空白等高线，收窄 */
+.arc-gallery + .footer--links { --fl-top: 96px; }
+
+/* 没有 GSAP / 系统开了减少动效：改成三排各自横向可拖 */
+.arc-gal-rows.is-static .arc-gal-row { overflow-x: auto; }
+.arc-gal-rows.is-static .arc-gal-track { transform: none; }
+
+@media (max-width: 820px) {
+  .arc-gal-head { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .arc-gal-meta { width: 100%; justify-content: space-between; }
+  .arc-gal-row { --h: clamp(96px, 16vh, 158px); }
+}
+@media (max-width: 560px) {
+  .arc-gal-title { font-size: 20px; letter-spacing: 6px; }
+  .arc-gal-kicker { letter-spacing: 4px; }
+  .arc-gal-row { --h: clamp(82px, 14vh, 130px); }
+}
+
+/* ============ 作品灯箱：点击缩略图看原图大图 ============ */
+.work { cursor: pointer; }
+
+.work-lb {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(16px, 4vw, 64px);
+  background: rgba(0, 0, 0, 0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.work-lb.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+.work-lb-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.work-lb-title {
+  font-size: clamp(16px, 2.4vw, 24px);
+  letter-spacing: 8px;
+  color: var(--white);
+}
+.work-lb-sub {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+.work-lb-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
+}
+.work-lb-img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+  background: #0b0b0b;
+  animation: lbImgIn 0.28s ease;
+}
+@keyframes lbImgIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 打开灯箱时锁住页面滚动 */
+body.lb-on { overflow: hidden; }
+
+@media (max-width: 560px) {
+  .work-lb-head { gap: 10px; }
+  .work-lb-title { letter-spacing: 5px; }
+}

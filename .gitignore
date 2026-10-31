@@ -1,0 +1,26 @@
+# ===== 构建 / 分享产物（可随时重新生成）=====
+.trae-html-share-packages/
+
+# ===== 调试截图（临时验证用）=====
+.screenshots/
+
+# ===== 原始封面素材 =====
+# 278MB 的网易云封面原图，仅用于生成 assets/covers 里的 320×320 缩略图。
+# 缩略图本身已纳入版本管理，所以这里不重复存原图。
+封面/
+
+# ===== 作品图原始素材（几十 MB 的大图）=====
+# 仅用于生成 assets/works 里的 900px 缩略图，站点只引用缩略图。
+assets/works-src/
+
+# ===== Python 构建工具缓存 =====
+__pycache__/
+*.pyc
+
+# ===== 系统 / 编辑器杂项 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.log
+node_modules/

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARCHIVE — 南辰佳佳</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="stylesheet" href="css/style.css?v=111" />
+  <!-- 同步执行：上一页点了站内链接时，新页面第一帧就用黑幕盖住，避免闪白 -->
+  <script>
+    try {
+      document.documentElement.classList.add('js-on');
+      if (sessionStorage.getItem('ncj:leaving') === '1') {
+        document.documentElement.classList.add('veil-on');
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <!-- 页面转场黑幕（默认透明，由 transition.js 控制） -->
+  <div class="page-veil" id="pageVeil" aria-hidden="true"></div>
+
+  <!-- 漂浮粒子背景：与主页同款，固定铺满视口、位于内容之下 -->
+  <canvas class="bg-particles" id="bgParticles" aria-hidden="true"></canvas>
+
+  <!-- 顶部菜单栏（与主页一致，ARCHIVE 为当前页） -->
+  <header class="navbar" id="navbar">
+    <a class="brand" href="github.html" aria-label="前往 GITHUB">NANCHEN JIAJIA</a>
+    <a class="logo" href="archive.html" aria-label="ARCHIVE">
+      <img src="assets/logo.svg" alt="NanchenJiaJia Logo" />
+    </a>
+    <nav class="menu" id="siteMenu">
+      <a href="index.html"><span>HOME</span></a>
+      <a href="index.html#about"><span>ABOUT</span></a>
+      <a href="studio.html"><span>STUDIO</span></a>
+      <a href="github.html"><span>GITHUB</span></a>
+      <a href="archive.html" class="active"><span>ARCHIVE</span></a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" type="button"
+            aria-label="打开菜单" aria-controls="siteMenu" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+  </header>
+
+  <!-- 主体：ARCHIVE 页
+       1) SECTION 05 / ARCHIVE / 欢迎你加入我们 逐字打字入场
+       2) 打完后等高线背景淡入，并持续缓慢流动
+       3) logo.svg 被采样成粒子点阵，从四处飞入拼成 logo（archive.js） -->
+  <main class="archive-page">
+    <div class="arc-grid">
+
+      <div class="arc-text">
+        <p class="arc-kicker">
+          <span class="arc-type" data-type="SECTION 05  /  COMING SOON">SECTION 05  /  COMING SOON</span>
+        </p>
+        <h1 class="arc-title">
+          <span class="arc-type arc-type--xl" data-type="ARCHIVE">ARCHIVE</span>
+        </h1>
+        <p class="arc-desc">
+          <span class="arc-type" data-type="欢迎你加入我们">欢迎你加入我们</span>
+        </p>
+        <div class="arc-rule" aria-hidden="true"></div>
+
+        <!-- 联系方式圆形按钮：链接先占位，后续替换 href 即可 -->
+        <div class="arc-social" aria-label="联系方式">
+          <a class="arc-soc" href="mailto:hello@example.com" aria-label="邮箱" title="邮箱">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2.75" y="5.5" width="18.5" height="13" rx="2.2" />
+              <path d="m3.4 7.1 8.6 6.1 8.6-6.1" />
+            </svg>
+          </a>
+          <a class="arc-soc" href="https://github.com/" target="_blank" rel="noopener noreferrer"
+             aria-label="GitHub" title="GitHub">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 20.2v-2.1c-3.2.6-4-1.4-4-1.4-.5-1.2-1.2-1.5-1.2-1.5-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3" />
+            </svg>
+          </a>
+          <a class="arc-soc" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"
+             aria-label="哔哩哔哩" title="哔哩哔哩">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2.6" y="7" width="18.8" height="13" rx="3" />
+              <path d="m7.2 3.2 3.3 3.8M16.8 3.2l-3.3 3.8M8.5 12.3v2.1M15.5 12.3v2.1" />
+            </svg>
+          </a>
+          <a class="arc-soc" href="https://wpa.qq.com/msgrd?v=3&amp;uin=000000000&amp;site=qq&amp;menu=yes"
+             target="_blank" rel="noopener noreferrer" aria-label="QQ" title="QQ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3.2c-2.7 0-4.6 2.2-4.6 5.1 0 .9.2 1.7.5 2.4-1 1.2-1.7 2.8-1.7 4 0 .7.4 1 1 .9.5.9 1.1 1.5 1.7 1.9-.4.3-.6.7-.6 1 0 .9 1 1.6 2.3 1.6h2.8c1.3 0 2.3-.7 2.3-1.6 0-.3-.2-.7-.6-1 .6-.4 1.2-1 1.7-1.9.6.1 1-.2 1-.9 0-1.2-.7-2.8-1.7-4 .3-.7.5-1.5.5-2.4 0-2.9-1.9-5.1-4.6-5.1Z" />
+              <path d="M10.2 8.6h.02M13.8 8.6h.02" stroke-width="2.1" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="arc-visual">
+        <canvas class="arc-logo" id="arcLogo" aria-hidden="true"></canvas>
+        <img class="arc-logo-img" id="arcLogoImg" src="assets/logo.svg" alt="NANCHEN JIAJIA 标志" />
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 图片册：三排横向长条贯穿整幅宽度，随页面滚动左右平移（gallery.js）
+       上、下两排向左，中间一排向右；页面停，图就停 -->
+  <section class="arc-gallery" id="arcGallery" aria-labelledby="arcGalTitle">
+    <div class="arc-gal-stage">
+      <div class="arc-gal-head">
+        <div class="arc-gal-headline">
+          <span class="arc-gal-kicker">SECTION 06  /  IMAGE ARCHIVE</span>
+          <h2 class="arc-gal-title" id="arcGalTitle">SWAV</h2>
+        </div>
+        <div class="arc-gal-meta">
+          <span class="arc-gal-count"><b id="arcGalCount">—</b> FRAMES</span>
+          <span class="arc-gal-hint">SCROLL TO DRIFT<i></i></span>
+        </div>
+      </div>
+
+      <div class="arc-gal-rows" id="arcGalRows">
+        <div class="arc-gal-row" data-dir="-1"><div class="arc-gal-track"></div></div>
+        <div class="arc-gal-row" data-dir="1"><div class="arc-gal-track"></div></div>
+        <div class="arc-gal-row" data-dir="-1"><div class="arc-gal-track"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer--links">
+    <div class="fl-band">
+      <div class="fl-head">
+        <span class="fl-title">友情链接</span>
+        <span class="fl-sub">FRIEND LINKS</span>
+        <span class="fl-count">20</span>
+      </div>
+      <nav class="fl-grid" aria-label="友情链接">
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+      </nav>
+    </div>
+    <div class="fl-copy">© 2026 YUNSHANGNANCHEN</div>
+  </footer>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="js/particles.js?v=1"></script>
+  <script src="js/transition.js?v=2"></script>
+  <script src="js/nav.js?v=1"></script>
+  <script src="js/bgm.js?v=5"></script>
+  <script src="js/archive.js?v=46"></script>
+  <script src="js/gallery-list.js?v=1"></script>
+  <script src="js/gallery.js?v=7"></script>
+</body>
+</html>

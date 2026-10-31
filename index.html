@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="CMomsHvpsPiCHzRTmp3KDl">
+<head data-page-node-id="2MNUG43I93VpuBiLbAgdzu">
+  <meta charset="UTF-8" data-page-node-id="64YjpBh4D8mpE6q3HvPfvX" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="4stB3K8bQ7zsEUKWL4zrvz" />
+  <title>YUNSHANGNANCHEN</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="stylesheet" href="css/style.css?v=111" data-page-node-id="xi2WTGAs6AS8JpZ8TPHPvP" />
+  <script>
+    /* 同步执行：上一页点了站内链接时，新页面第一帧就用黑幕盖住，避免闪白 */
+    try {
+      if (sessionStorage.getItem('ncj:leaving') === '1') {
+        document.documentElement.classList.add('veil-on');
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body data-page-node-id="3wuwwss1HHMGagCuVJLrpc">
+
+  <!-- 页面转场黑幕（默认透明，由 transition.js 控制） -->
+  <div class="page-veil" id="pageVeil" aria-hidden="true"></div>
+
+  <!-- 开场动画：纯黑底 + 漂浮粒子，两行文字各自从口子中上滑，下部约 1/6 被遮 -->
+  <div class="intro" id="intro" data-page-node-id="gmZumyNvQwBCX7d4s9kwio">
+    <canvas class="intro-particles" id="introParticles" data-page-node-id="wjO3qM5lkaVBfbbZ6LdyNf"></canvas>
+    <div class="intro-text" data-page-node-id="oNyN37RazAX4IH19oU377O">
+      <div class="intro-mask intro-mask-1" data-page-node-id="g0696T8Ggvs6lI93uFvdkI">
+        <p class="intro-line-1" data-page-node-id="2AqgUL0Sl02CdicPx9EwDz">WELCOME TO MY WEBSITE</p>
+      </div>
+      <div class="intro-mask intro-mask-2" data-page-node-id="EZa0DHFJXXiLNdZC1hEUEb">
+        <p class="intro-line-2" data-page-node-id="VyPwjm8tZ0U2SrPURVpEtP">NanchenJiaJia</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部菜单栏 -->
+  <header class="navbar" id="navbar" data-page-node-id="tLH7QWXFhQgvysTHH48VTb">
+    <a class="brand" href="#about" aria-label="前往关于我" data-page-node-id="etDKcoJkEc8r1qQVMn0QqQ">NANCHEN JIAJIA</a>
+    <a class="logo" href="archive.html" aria-label="ARCHIVE" data-page-node-id="logoCenter">
+      <img src="assets/logo.svg" alt="NanchenJiaJia Logo" data-page-node-id="logoImg" />
+    </a>
+    <nav class="menu" id="siteMenu" data-page-node-id="GOBhbCWQL1AJrhl53Gaj3I">
+      <a href="#top" data-page-node-id="w6ItoGabniVZ53dACxnwRy"><span>HOME</span></a>
+      <a href="studio.html" data-page-node-id="menuMusic"><span>STUDIO</span></a>
+      <a href="github.html" data-page-node-id="menuGithub"><span>GITHUB</span></a>
+      <a href="archive.html" data-page-node-id="menuArchive"><span>ARCHIVE</span></a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" type="button"
+            aria-label="打开菜单" aria-controls="siteMenu" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+  </header>
+
+  <!-- 首屏：整屏图片；下滑时可视区（hero-frame）上下收窄，
+       图片在可视区内始终居中，超出部分被裁切 -->
+  <section class="hero" id="top" data-page-node-id="KgvQxsZ8oDL5ysFWUQUDG8">
+    <div class="hero-sticky" data-page-node-id="NVcH6xXAY5ihn2E830Fe0I">
+      <div class="hero-frame" id="heroFrame" data-page-node-id="mLigf4EAoz86CMJoN8oRe2">
+        <img class="hero-img" id="heroImg" src="assets/hero.jpeg" alt="主页插画" data-page-node-id="cmiTPvZWBDqff84hfwURDB" />
+        <div class="crop-edge" id="cropEdge" data-page-node-id="wtJ5oF1LWXTmAtdnpd4nV1"></div>
+        <div class="hero-caption" data-page-node-id="fMmhPz6qUuo14KSA81J7Kf">
+          <p class="caption-line" data-page-node-id="xjKGExhAEB7SFgev4134CY">“记忆决定意识，亦或是意识存在记忆”</p>
+        </div>
+      </div>
+      <div class="scroll-hint" id="scrollHint" data-page-node-id="6fdAtPF1aoWAowXJ8LThmx">
+        <span class="arrow" data-page-node-id="7etQn3s9V4CLfdgUpi9akq">↓</span>
+        <span data-page-node-id="S1YEBNEIveJv0aPvKnQMWt">向下滚动</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 下滑出的内容：关于我 -->
+  <main class="content" data-page-node-id="DnAUJldxDW2mPXIaaj1EIJ">
+    <!-- 关于我：左边方框头像，右边名字 + 代码风格介绍，两者垂直居中对齐；
+         两位成员轮流展示，每人打印完停留 1.5 秒后自动切到下一位（用两个斜杠 // 区分） -->
+    <section class="about panel" id="about" data-page-node-id="eAjT1emfOIlSxi6aDwGyXV">
+      <div class="about-row">
+        <figure class="about-avatar" id="aboutAvatarBox" data-page-node-id="aboutAvatarBox">
+          <img class="about-avatar-img" id="aboutAvatar" src="https://github.com/yunshangnanchen.png"
+               alt="头像" data-page-node-id="aboutAvatarImg" />
+          <!-- 像素化 + 打印层：黑白、彩色两张 48×48 画布由 script.js 绘制 -->
+          <div class="av-print" id="avPrint" aria-hidden="true">
+            <canvas class="av-px av-px--mono" id="avMono" width="48" height="48"></canvas>
+            <canvas class="av-px av-px--color" id="avColor" width="48" height="48"></canvas>
+            <span class="av-scan" id="avScan"></span>
+          </div>
+        </figure>
+        <div class="about-text" data-page-node-id="aboutText">
+          <!-- 代码风格的「关于我」：每行 行号 | 内容，由 script.js 按当前成员动态渲染 -->
+          <div class="code-block" data-page-node-id="codeBlock">
+            <div class="code-body" id="codeBody"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 两位成员切换器：两个横杠，位于头像+介绍的正下方居中；点击切换（点击后停止自动轮播） -->
+      <div class="people-switch" id="peopleSwitch" role="tablist" aria-label="切换成员"></div>
+    </section>
+
+    <footer class="footer" data-page-node-id="xrzIpXdblV87m3LR51BMRI">
+      <span data-page-node-id="GH4KpCzc6vsJT3GAPHmBxa">© 2026 YUNSHANGNANCHEN</span>
+    </footer>
+  </main>
+
+  <!-- 全站漂浮粒子：固定在窗口上，白色微光点从下往上缓缓浮起 -->
+  <canvas class="bg-particles" id="bgParticles" aria-hidden="true" data-page-node-id="bgParticles"></canvas>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="js/particles.js?v=1"></script>
+  <script src="js/transition.js?v=2"></script>
+  <script src="js/nav.js?v=1"></script>
+  <script src="js/script.js?v=50"></script>
+  <script src="js/bgm.js?v=5"></script>
+</body>
+</html>

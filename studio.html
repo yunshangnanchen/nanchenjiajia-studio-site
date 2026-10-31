@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STUDIO — 南辰佳佳</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="stylesheet" href="css/style.css?v=112" />
+  <!-- 同步执行：上一页点了站内链接时，新页面第一帧就用黑幕盖住，避免闪白 -->
+  <script>
+    try {
+      if (sessionStorage.getItem('ncj:leaving') === '1') {
+        document.documentElement.classList.add('veil-on');
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <!-- 页面转场黑幕（默认透明，由 transition.js 控制） -->
+  <div class="page-veil" id="pageVeil" aria-hidden="true"></div>
+
+  <!-- 顶部菜单栏（与主页一致，STUDIO 为当前页） -->
+  <header class="navbar" id="navbar">
+    <a class="brand" href="github.html" aria-label="前往 GITHUB">NANCHEN JIAJIA</a>
+    <a class="logo" href="archive.html" aria-label="ARCHIVE">
+      <img src="assets/logo.svg" alt="NanchenJiaJia Logo" />
+    </a>
+    <nav class="menu" id="siteMenu">
+      <a href="index.html"><span>HOME</span></a>
+      <a href="index.html#about"><span>ABOUT</span></a>
+      <a href="studio.html" class="active"><span>STUDIO</span></a>
+      <a href="github.html"><span>GITHUB</span></a>
+      <a href="archive.html"><span>ARCHIVE</span></a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" type="button"
+            aria-label="打开菜单" aria-controls="siteMenu" aria-expanded="false">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+  </header>
+
+  <!-- 主体：专辑页面 -->
+<main class="music-page">
+    <section class="album">
+      <div class="album-left">
+        <div class="album-cover">
+          <img src="assets/j_m_DVSP-0160.jpg" alt="Everything — album cover" />
+        </div>
+        <div class="album-meta">
+          <div class="meta-head">
+            <span class="meta-name">Diverse System&gt;&gt;Item List.</span>
+            <span class="meta-price">Price: 1100YEN</span>
+          </div>
+          <dl class="meta-list">
+            <div class="meta-row"><dt>Model Number</dt><dd>DVSP-0160</dd></div>
+            <div class="meta-row"><dt>Release Date</dt><dd>2016/10/30</dd></div>
+            <div class="meta-row"><dt>Illustrator</dt><dd>iraLION</dd></div>
+            <div class="meta-row"><dt>Designer</dt><dd>Tsukishiro Hikari</dd></div>
+            <div class="meta-row"><dt>Mastering</dt><dd>Ian Jones<span class="meta-sub">(Abbey Road Studios)</span></dd></div>
+            <div class="meta-row"><dt>Producer</dt><dd>YsK439</dd></div>
+          </dl>
+
+          <!-- 封面文字下方的直线音频条：点一下播放/暂停 Mirror -->
+        <div class="soundbar" id="soundbar" role="button" tabindex="0"
+             aria-label="Mirror 播放 / 暂停" aria-pressed="false" data-state="idle">
+          <canvas class="sb-spectrum" id="sbSpectrum" aria-hidden="true"></canvas>
+          <span class="sb-line"><span class="sb-fill" id="sbFill"></span><span class="sb-knob" id="sbKnob"></span></span>
+            <span class="sb-info">
+              <span class="sb-title" id="sbTitle">Mirror — HoneyComeBear</span>
+              <span class="sb-right">
+                <span class="sb-icon" id="sbIcon" aria-hidden="true">▶</span>
+                <span class="sb-time" id="sbTime">00:00 / 00:00</span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="album-info">
+        <header class="album-head">
+          <h1 class="album-title">Everything</h1>
+          <p class="album-sub">Tweet</p>
+        </header>
+
+        <ol class="tracks">
+          <li class="track track-mirror" data-play="mirror" title="点击直接播放 Mirror"><span class="t-no">01</span><span class="t-title">Mirror</span><span class="t-artist">HoneyComeBear</span></li>
+          <li class="track track-soda" data-play="soda" title="点击直接播放 SODA"><span class="t-no">02</span><span class="t-title">SODA</span><span class="t-artist">ちびた, そらいろくらぶ</span></li>
+          <li class="track track-h" data-play="h" title="点击直接播放 h"><span class="t-no">03</span><span class="t-title">h</span><span class="t-artist">月代 彩</span></li>
+          <li class="track track-rainbow" data-play="rainbow" title="点击直接播放 Rainbow"><span class="t-no">04</span><span class="t-title">Rainbow</span><span class="t-artist">月代 彩</span></li>
+          <li class="track track-illumi" data-play="illumi" title="点击直接播放 Illumi"><span class="t-no">05</span><span class="t-title">Illumi</span><span class="t-artist">月代 彩</span></li>
+          <li class="track track-featherfall" data-play="featherfall" title="点击直接播放 Featherfall"><span class="t-no">06</span><span class="t-title">Featherfall</span><span class="t-artist">Aaron Cherof, Minecraft</span></li>
+          <li class="track track-entorevolution" data-play="entorevolution" title="点击直接播放 Entorevolution"><span class="t-no">07</span><span class="t-title">Entorevolution</span><span class="t-artist">Bernis</span></li>
+          <li class="track track-blumepopo" data-play="blumepopo" title="点击直接播放 彼方高さから躰放ったあなた"><span class="t-no">08</span><span class="t-title">彼方高さから躰放ったあなた</span><span class="t-artist">Blume popo</span></li>
+          <li class="track track-timetolove" data-play="timetolove" title="点击直接播放 Time To Love"><span class="t-no">09</span><span class="t-title">Time To Love</span><span class="t-artist">October</span></li>
+          <li class="track track-everlasting" data-play="everlasting" title="点击直接播放 Everlasting Truth -band ver-"><span class="t-no">10</span><span class="t-title">Everlasting Truth -band ver-</span><span class="t-artist">re:plus</span></li>
+          <li class="track track-yorushika" data-play="yorushika" title="点击直接播放 森の教会"><span class="t-no">11</span><span class="t-title">森の教会</span><span class="t-artist">ヨルシカ</span></li>
+          <li class="track track-rakka" data-play="rakka" title="点击直接播放 落花"><span class="t-no">12</span><span class="t-title">落花</span><span class="t-artist">n-buna</span></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <!-- 封面花带：两条斜向长条，从页面两侧伸入，交叉成不规则的 X -->
+  <!-- 封面由 ribbon.js 每次加载随机抽取并注入（.cx-track 留空，无 JS 时只是一条空白区）
+       加了新封面就改 data-cover-count 的数字即可 -->
+  <section class="cover-x" aria-hidden="true"
+           data-covers="assets/covers/" data-cover-count="48" data-per-band="24">
+    <div class="cx-band cx-band--a">
+      <div class="cx-track"></div>
+    </div>
+    <div class="cx-band cx-band--b">
+      <div class="cx-track"></div>
+    </div>
+  </section>
+
+  <!-- 作品画廊：花带下方，单独一块图片墙。
+       排版：works.js 洗牌后按每张图的原始宽高比摆瀑布流（画面完整不裁切），
+             横向作品按比例随机跨两列。
+       清单：works-list.js 由 `python tools/works-build.py` 生成 —— 扫描 assets/works
+             原图生成 assets/works-thumb 缩略图，张数和尺寸自动同步。 -->
+  <section class="works" id="works" aria-labelledby="worksTitle"
+           data-works="assets/works-thumb/" data-work-count="63" data-ext="jpg">
+    <div class="works-head">
+      <span class="works-title" id="worksTitle">YUNA ゆうな</span>
+      <span class="works-sub">Excellent illustration</span>
+      <span class="works-count" id="worksCount">63</span>
+    </div>
+    <div class="works-grid" id="worksGrid"></div>
+  </section>
+
+  <footer class="footer--links">
+    <div class="fl-band">
+      <div class="fl-head">
+        <span class="fl-title">友情链接</span>
+        <span class="fl-sub">FRIEND LINKS</span>
+        <span class="fl-count">20</span>
+      </div>
+      <nav class="fl-grid" aria-label="友情链接">
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+        <a class="fl-link" href="https://www.bilibili.com/" target="_blank" rel="noopener noreferrer"><span class="fl-name">哔哩哔哩</span></a>
+      </nav>
+    </div>
+    <div class="fl-copy">© 2026 YUNSHANGNANCHEN</div>
+  </footer>
+
+  <!-- 底部播放器条：点击曲目后滑出，内嵌网易云外链播放器 -->
+  <div class="music-player" id="musicPlayer" aria-hidden="true">
+    <div class="mp-inner">
+      <span class="mp-now" id="mpNow"></span>
+      <a class="mp-link" id="mpLink" href="#" target="_blank" rel="noopener noreferrer"
+         title="网易云站外外链常因版权/自动播放策略无法出声，点此在新标签打开歌曲页，保证可播放">外链受限？在网易云播放 ↗</a>
+      <iframe id="mpFrame" frameborder="no" border="0" marginwidth="0" marginheight="0"
+              width="330" height="86" src="" allow="autoplay; encrypted-media"></iframe>
+      <button class="mp-close" id="mpClose" aria-label="关闭播放器" title="关闭">×</button>
+    </div>
+  </div>
+
+  <!-- 与主页同一套漂浮粒子 -->
+  <canvas class="bg-particles" id="bgParticles" aria-hidden="true"></canvas>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="js/particles.js?v=1"></script>
+  <script src="js/transition.js?v=2"></script>
+  <script src="js/nav.js?v=1"></script>
+  <script src="js/bgm.js?v=5"></script>
+  <script src="js/ribbon.js?v=5"></script>
+  <script src="js/works-list.js?v=2"></script>
+  <script src="js/works.js?v=7"></script>
+  <script>
+    /* 专辑页入场：
+       左列（封面+规格）从左淡入；
+       右侧标题/副标/DISC 1 依次淡入；
+       每首曲目单独错峰（stagger）入场，而非整体一起出现 */
+    if (window.gsap) {
+      /* 左列不再整体共用同一个动画：封面单独淡入，
+         封面下方的文字（表头 / 每一行规格 / 播放条）各自错峰入场 */
+      gsap.set('.album-cover', { autoAlpha: 0, x: -24 });
+      gsap.set('.meta-head', { autoAlpha: 0, y: 12 });
+      gsap.set('.meta-row', { autoAlpha: 0, y: 12 });
+      gsap.set('.soundbar', { autoAlpha: 0, y: 12 });
+      gsap.set('.album-head', { autoAlpha: 0, y: 14 });
+      gsap.set('.track', { autoAlpha: 0, y: 14 });
+
+      gsap.to('.album-cover', { autoAlpha: 1, x: 0, duration: 0.85, ease: 'power3.out', delay: 0.2 });
+      gsap.to('.meta-head', { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out', delay: 0.42 });
+      gsap.to('.meta-row', { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out', delay: 0.48, stagger: 0.07 });
+      gsap.to('.soundbar', { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', delay: 0.88 });
+      gsap.to('.album-head', { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power3.out', delay: 0.36 });
+      gsap.to('.track', { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', delay: 0.6, stagger: 0.07 });
+
+    }
+
+    /* ---------- 本地音频播放：所有曲目共享一个 Audio 实例 ---------- */
+    /* 点击任意曲目或直线音频条都能播放 / 暂停，切歌时自动切换 src */
+    (function () {
+      var bar    = document.getElementById('soundbar');
+      var fill   = document.getElementById('sbFill');
+      var knob   = document.getElementById('sbKnob');
+      var title  = document.getElementById('sbTitle');
+      var icon   = document.getElementById('sbIcon');
+      var time   = document.getElementById('sbTime');
+      var line   = bar ? bar.querySelector('.sb-line') : null;
+      var seeking = false;                   // 是否正在拖拽进度条
+
+      var HOME_TITLE = 'Mirror — HoneyComeBear';
+
+      // 本地歌曲映射：key → { 音频文件, 显示标题 }
+      // 全部音频位于 studio/（文件名已规范为 ASCII，显示名保留原文）
+      var localTracks = {
+        mirror:         { src: 'assets/audio/Mirror.mp3',            title: 'Mirror — HoneyComeBear' },
+        soda:           { src: 'assets/audio/soda.mp3',              title: 'SODA — ちびた, そらいろくらぶ' },
+        h:              { src: 'assets/audio/h.mp3',                 title: 'h — 月代 彩' },
+        rainbow:        { src: 'assets/audio/rainbow.mp3',           title: 'Rainbow — 月代 彩' },
+        illumi:         { src: 'assets/audio/Illumi.mp3',            title: 'Illumi — 月代 彩' },
+        featherfall:    { src: 'assets/audio/featherfall.mp3',       title: 'Featherfall — Aaron Cherof, Minecraft' },
+        entorevolution: { src: 'assets/audio/entorevolution.mp3',    title: 'Entorevolution — Bernis' },
+        blumepopo:      { src: 'assets/audio/blume-popo.mp3',        title: '彼方高さから躰放ったあなた — Blume popo' },
+        timetolove:     { src: 'assets/audio/time-to-love.mp3',      title: 'Time To Love — October' },
+        everlasting:    { src: 'assets/audio/everlasting-truth.mp3', title: 'Everlasting Truth -band ver- — re:plus' },
+        yorushika:      { src: 'assets/audio/yorushika-mori.mp3',    title: '森の教会 — ヨルシカ' },
+        rakka:          { src: 'assets/audio/rakka.mp3',             title: '落花 — n-buna' }
+      };
+
+      var audio = new Audio();
+      audio.preload = 'metadata';
+      audio.src = localTracks.mirror.src;   // 默认预加载 Mirror
+
+      /* ---- 跨页续播：记住「哪首 / 播到哪 / 在不在播」 ----
+         换页时 bgm.js 会接着放同一首，切回本页再从原位置接上，
+         所以点导航去别的页面音乐不会断。 */
+      var TRACK_STORE = 'ncj:track';
+      var noSpectrumUntil = 0;   // 恢复播放的头几秒不建 AudioContext：没有用户手势时它会被挂起，反而没声音
+
+      function saveTrack(playing) {
+        var t = localTracks[currentKey];
+        if (!t) return;
+        try {
+          sessionStorage.setItem(TRACK_STORE, JSON.stringify({
+            key: currentKey,
+            src: t.src,
+            title: t.title,
+            t: audio.currentTime || 0,
+            at: Date.now(),
+            playing: typeof playing === 'boolean' ? playing : !audio.paused
+          }));
+        } catch (e) {}
+      }
+      // 切页瞬间：先把播放状态存好，再停频谱绘制、暂停本地音频，
+      // 避免浏览器在 unload 时还要处理一个正在经 Web Audio 输出的音频元素，
+      // 减少转场卡顿（续播由 bgm.js 在新页面接管，不受影响）
+      window.addEventListener('pagehide', function () {
+        saveTrack();
+        try { hardClearSpectrum(); } catch (e) {}
+        try { audio.pause(); } catch (e) {}
+      });
+      window.addEventListener('beforeunload', function () { saveTrack(); });
+      setInterval(function () { if (!audio.paused) saveTrack(true); }, 2500);
+
+      /* ---- 实时频谱可视化（Web Audio API） ---- */
+      var specCanvas = document.getElementById('sbSpectrum');
+      var specCtx = specCanvas ? specCanvas.getContext('2d') : null;
+      var audioCtx = null, analyser = null, srcNode = null, freqData = null, specRAF = 0;
+      var specBars = null;                    // 每条当前高度 0..1，用于上升/回落缓动
+
+      function setupAudioGraph() {
+        if (audioCtx || !specCtx) return;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        audioCtx = new AC();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;                 // 32 频段
+        analyser.smoothingTimeConstant = 0.8;
+        srcNode = audioCtx.createMediaElementSource(audio); // 每元素仅可创建一次
+        srcNode.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        specBars = new Float32Array(analyser.frequencyBinCount);
+      }
+
+      function sizeSpectrum() {
+        if (!specCtx) return;
+        var dpr = window.devicePixelRatio || 1;
+        var w = specCanvas.clientWidth || (specCanvas.parentElement && specCanvas.parentElement.clientWidth) || 280;
+        var h = specCanvas.clientHeight || 30;
+        specCanvas.width = Math.max(1, Math.floor(w * dpr));
+        specCanvas.height = Math.max(1, Math.floor(h * dpr));
+        specCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      /* 一帧：播放时向目标高度快速上升；停止时每条自然回落到 0。
+         返回 true 表示还需要继续下一帧（播放中，或仍有条在回落）。 */
+      function drawSpectrum() {
+        var playing = !audio.paused && !audio.ended;
+        if (!specCtx || !specBars) return playing;
+        if (playing && analyser) analyser.getByteFrequencyData(freqData);
+
+        var n = specBars.length;
+        var w = specCanvas.clientWidth, h = specCanvas.clientHeight;
+        specCtx.clearRect(0, 0, w, h);
+        var gap = 2;
+        var barW = (w - gap * (n - 1)) / n;
+        var idle = true;                       // 是否所有条都已归零
+
+        for (var i = 0; i < n; i++) {
+          var target = (playing && freqData) ? freqData[i] / 255 : 0;
+          var cur = specBars[i];
+          // 上升快（0.45）、回落慢（0.06）——让高点慢慢掉到低点自然消失
+          var ease = target > cur ? 0.45 : 0.06;
+          cur += (target - cur) * ease;
+          if (cur < 0.004) cur = 0;
+          specBars[i] = cur;
+          if (cur > 0) idle = false;
+
+          var barH = cur * (h - 2);
+          if (barH < 1.5 && cur > 0) barH = 1.5;
+          var x = i * (barW + gap);
+          specCtx.fillStyle = 'rgba(255,255,255,' + (0.25 + 0.75 * cur).toFixed(3) + ')';
+          specCtx.fillRect(x, h - barH, barW, barH);
+        }
+        // 播放中，或仍在回落 → 继续；完全归零且已停止 → 结束动画
+        return playing || !idle;
+      }
+
+      function specLoop() {
+        var cont = drawSpectrum();
+        specRAF = cont ? requestAnimationFrame(specLoop) : 0;
+      }
+
+      function startSpectrum() {
+        if (!specCtx) return;
+        if (Date.now() < noSpectrumUntil) return;   // 恢复播放中：先出声，频谱等用户点一下再画
+        sizeSpectrum();
+        if (!audioCtx) setupAudioGraph();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        if (!analyser) return;                 // 浏览器不支持 Web Audio 时优雅降级
+        if (!specRAF) specRAF = requestAnimationFrame(specLoop);
+      }
+
+      /* 停止：不立即清空，交给循环让条自然回落后自行结束 */
+      function stopSpectrum() {
+        if (!specCtx || !specBars) { hardClearSpectrum(); return; }
+        if (!specRAF) specRAF = requestAnimationFrame(specLoop);
+      }
+
+      function hardClearSpectrum() {
+        if (specRAF) { cancelAnimationFrame(specRAF); specRAF = 0; }
+        if (specCtx) { var w = specCanvas.clientWidth, h = specCanvas.clientHeight; specCtx.clearRect(0, 0, w, h); }
+      }
+
+      window.addEventListener('resize', sizeSpectrum);
+
+      var state = 'idle';
+      var currentKey = 'mirror';             // 当前选中的本地曲目
+
+      function fmt(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        var m = Math.floor(sec / 60), s = sec % 60;
+        return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }
+
+      function setState(next, note) {
+        state = next;
+        bar.setAttribute('data-state', next);
+        bar.setAttribute('aria-pressed', next === 'playing' ? 'true' : 'false');
+        var cur = localTracks[currentKey];
+        bar.setAttribute('aria-label', (cur ? cur.title : '本地曲目') + (next === 'playing' ? ' 播放中，点击暂停' : '，点击播放'));
+        icon.textContent = next === 'playing' ? '❚❚' : (next === 'loading' ? '···' : '▶');
+        title.textContent = note || (cur ? cur.title : HOME_TITLE);
+        /* 图标切换的脉冲过渡：去掉旧动画帧，强制重排后重新触发，保证连续点击也能弹一下 */
+        icon.classList.remove('is-pulse');
+        void icon.offsetWidth;
+        icon.classList.add('is-pulse');
+      }
+
+      function paint() {
+        if (seeking) return;                 // 拖拽时由 seekFromX 直接控制，避免跳动
+        var dur = isFinite(audio.duration) ? audio.duration : 0;
+        var pos = isFinite(audio.currentTime) ? audio.currentTime : 0;
+        var pct = dur ? Math.min(100, Math.max(0, pos / dur * 100)) : 0;
+        fill.style.width = pct + '%';
+        knob.style.left = pct + '%';
+        time.textContent = fmt(pos) + ' / ' + fmt(dur);
+      }
+
+      function markActive(key) {
+        document.querySelectorAll('.track.active').forEach(function (t) { t.classList.remove('active'); });
+        var el = document.querySelector('.track-' + key);
+        if (el) el.classList.add('active');
+      }
+
+      function playTrack(key) {
+        var t = localTracks[key];
+        if (!t) return;
+        // 播放曲目时暂停全站背景音乐，避免两路声音同时响
+        if (window.SiteBGM) window.SiteBGM.pause();
+        // 切歌：换 src
+        if (currentKey !== key) {
+          currentKey = key;
+          audio.src = t.src;
+        }
+        noSpectrumUntil = 0;                  // 用户亲手点的，频谱正常开
+        setState('loading', t.title);
+        var p = audio.play();
+        startSpectrum();
+        saveTrack(true);
+        if (p && p.catch) {
+          p.catch(function () { setState('blocked', '播放失败 · 再点一次'); saveTrack(false); });
+        }
+      }
+
+      function toggle() {
+        if (audio.paused) playTrack(currentKey);
+        else audio.pause();
+      }
+
+      audio.addEventListener('loadedmetadata', paint);
+      audio.addEventListener('durationchange', paint);
+      audio.addEventListener('timeupdate', paint);
+      audio.addEventListener('play', function () { setState('playing'); markActive(currentKey); startSpectrum(); saveTrack(true); });
+      audio.addEventListener('playing', function () { setState('playing'); markActive(currentKey); startSpectrum(); });
+      audio.addEventListener('pause', function () {
+        saveTrack(false);
+        if (!audio.ended) { setState(audio.currentTime > 0 ? 'paused' : 'idle'); stopSpectrum(); }
+      });
+      audio.addEventListener('ended', function () {
+        audio.currentTime = 0;
+        paint();
+        setState('idle');
+        stopSpectrum();
+        saveTrack(false);
+      });
+      audio.addEventListener('error', function () { setState('blocked', '音频载入失败'); });
+
+      /* 点击本地曲目（data-play）→ 播放对应本地音频 */
+      document.querySelectorAll('.track[data-play]').forEach(function (t) {
+        t.addEventListener('click', function () {
+          var key = t.getAttribute('data-play');
+          playTrack(key);
+        });
+      });
+
+      /* 直线音频条：点击暂停 / 继续 */
+      if (bar) {
+        bar.addEventListener('click', toggle);
+        bar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      }
+
+      /* 进度条可拖动：在 sb-line 上点击 / 拖拽即可定位播放进度 */
+      if (line) {
+        var dragging = false;
+        function seekFromX(clientX) {
+          var rect = line.getBoundingClientRect();
+          if (!rect.width) return;
+          var ratio = (clientX - rect.left) / rect.width;
+          ratio = Math.min(1, Math.max(0, ratio));
+          var dur = isFinite(audio.duration) ? audio.duration : 0;
+          if (dur > 0) { try { audio.currentTime = ratio * dur; } catch (e) {} }
+          var pct = ratio * 100;
+          fill.style.width = pct + '%';
+          knob.style.left = pct + '%';
+          time.textContent = fmt(ratio * dur) + ' / ' + fmt(dur);
+        }
+        line.addEventListener('pointerdown', function (e) {
+          e.stopPropagation(); e.preventDefault();
+          dragging = true; seeking = true;
+          try { line.setPointerCapture(e.pointerId); } catch (err) {}
+          seekFromX(e.clientX);
+        });
+        line.addEventListener('pointermove', function (e) {
+          if (!dragging) return;
+          e.stopPropagation();
+          seekFromX(e.clientX);
+        });
+        line.addEventListener('pointerup', function (e) {
+          if (!dragging) return;
+          dragging = false; seeking = false;
+          seekFromX(e.clientX);
+          try { line.releasePointerCapture(e.pointerId); } catch (err) {}
+        });
+        line.addEventListener('pointercancel', function () { dragging = false; seeking = false; });
+        line.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+
+      /* 供网易云外链播放器调用：切到外链歌曲时把本地音频停掉 */
+      window.MirrorPlayer = {
+        pause: function () { if (!audio.paused) audio.pause(); },
+        isPlaying: function () { return !audio.paused; }
+      };
+
+      setState('idle');
+      paint();
+
+      /* ---- 从别的页面切回来 / 刷新：接着上次的位置继续 ---- */
+      (function restoreSession() {
+        var s = null;
+        try { s = JSON.parse(sessionStorage.getItem(TRACK_STORE) || 'null'); } catch (e) {}
+        if (!s || !s.key || !localTracks[s.key]) return;
+        if (Date.now() - (s.at || 0) > 6 * 60 * 1000) return;   // 太久以前的不续
+
+        currentKey = s.key;
+        var tr = localTracks[s.key];
+        if (audio.src.indexOf(tr.src) < 0) {
+          audio.src = tr.src;
+          audio.load();
+        }
+
+        // 把换页花掉的时间补上，听起来就是一路连着的
+        var gap = Math.min(3, Math.max(0, (Date.now() - (s.at || Date.now())) / 1000));
+        var target = Math.max(0, (s.t || 0) + (s.playing ? gap : 0));
+
+        function applySeek() {
+          try { audio.currentTime = target; } catch (e) {}
+          audio.addEventListener('seeked', paint, { once: true });   // 定位生效后再刷一次时间
+          paint();
+        }
+        if (audio.readyState >= 1) applySeek();
+        else audio.addEventListener('loadedmetadata', applySeek, { once: true });
+
+        markActive(currentKey);
+
+        if (s.playing) {
+          setState('playing');
+          noSpectrumUntil = Date.now() + 4000;   // 先保证出声，频谱等用户点一下再画
+          var p = audio.play();
+          if (p && p.catch) p.catch(function () {
+            setState(audio.currentTime > 0 ? 'paused' : 'idle');
+          });
+        } else {
+          setState(audio.currentTime > 0 ? 'paused' : 'idle');
+        }
+      })();
+    })();
+
+    /* 点击其它曲目 → 底部播放器加载对应网易云外链并滑出 */
+    (function () {
+      var player = document.getElementById('musicPlayer');
+      var frame  = document.getElementById('mpFrame');
+      var now    = document.getElementById('mpNow');
+      var closeB = document.getElementById('mpClose');
+      var link   = document.getElementById('mpLink');
+      // 补全协议：预览是 file:// 环境，协议相对的 // 会失效，统一用 https
+      var BASE = 'https://music.163.com/outchain/player?type=2&id=';
+
+      function play(track) {
+        var id = track.getAttribute('data-song') || '463184224';
+        var no = track.querySelector('.t-no').textContent;
+        var title = track.querySelector('.t-title').textContent;
+        if (window.MirrorPlayer) window.MirrorPlayer.pause();   // 避免两个播放器同时出声
+        // 重新赋值 src → iframe 重新加载并自动播放（auto=1）
+        frame.src = BASE + id + '&auto=1&height=66';
+        link.href = 'https://music.163.com/song?id=' + id;   // 兜底：站内一定能播
+        now.textContent = no + '  ' + title + ' — Tsukishiro Hikari';
+        player.classList.add('open');
+        player.setAttribute('aria-hidden', 'false');
+        document.querySelectorAll('.track.active').forEach(function (t) { t.classList.remove('active'); });
+        track.classList.add('active');
+      }
+      function stop() {
+        player.classList.remove('open');
+        player.setAttribute('aria-hidden', 'true');
+        frame.src = '';   // 清空 → 停止播放
+        document.querySelectorAll('.track.active').forEach(function (t) { t.classList.remove('active'); });
+      }
+
+      document.querySelectorAll('.track[data-song]').forEach(function (t) {
+        t.addEventListener('click', function () { play(t); });
+      });
+      closeB.addEventListener('click', stop);
+    })();
+  </script>
+</body>
+</html>
